@@ -101,9 +101,9 @@ Pflicht-Target: `make arch-check`.
 
 | Lastenheft-Anforderung          | Schwelle | Wirkung                                                                 |
 | ------------------------------- | -------- | ----------------------------------------------------------------------- |
-| `GG-NFA-COV-001` (Gesamt)       | 80 %     | `cargo llvm-cov --fail-under 80` plus `vitest --coverage` mit Schwelle 80 in `vitest.config.ts`. |
-| `GG-NFA-COV-002` (kritisch)     | 90 %     | Separates Target `make coverage-critical`: laeuft `cargo llvm-cov` nur auf den in der Liste in `GG-NFA-COV-002` genannten Modulen und prueft `--fail-under 90`. |
-| `GG-NFA-COV-003` (Branch, V1)   | 70 %     | V1, nicht MVP-blockierend. `cargo llvm-cov --branch` und `vitest --coverage --reporter=v8` melden Branch separat. |
+| `GG-NFA-COV-001` (Gesamt)       | 80 %     | Rust: `cargo llvm-cov --fail-under-lines 80`. Frontend: `vitest run --coverage` mit `coverage.thresholds.lines = 80` in `vitest.config.ts` (vitest hat keinen CLI-`--fail-under`-Schalter; Schwellen sind Config-getrieben). |
+| `GG-NFA-COV-002` (kritisch)     | 90 %     | Separates Target `make coverage-critical`: laeuft `cargo llvm-cov` nur auf den in `GG-NFA-COV-002` genannten Modulen mit `--fail-under-lines 90`. |
+| `GG-NFA-COV-003` (Branch, V1)   | 70 %     | V1, nicht MVP-blockierend. Rust: `cargo llvm-cov --fail-under-branches 70`. Frontend: `coverage.thresholds.branches = 70` in `vitest.config.ts`. |
 | `GG-NFA-COV-004` (keine kuenstliche) | —   | Wird ueber Code-Review erzwungen, nicht ueber Tooling.                  |
 
 Die zwei Stacks werden **nicht** in einem gemeinsamen Coverage-Wert
@@ -122,8 +122,11 @@ Stack-Target gated unabhaengig; `make gates` schlaegt fehl, wenn
 | `GG-NFA-QG-005` (Dependency-Security) | `make dep-audit-rust` + `make dep-audit-frontend`     |
 
 `make gates` ist der Aggregator und entspricht dem CI-gruenen
-Zustand. `make ci` fuegt zusaetzlich `make bundle` hinzu (siehe
-`GG-NFA-INSTALL-005`).
+Zustand. `make ci` fuegt `make gates` und `make bundle` zu einem
+vollstaendigen CI-Lauf zusammen. `make fullbuild` baut ausschliesslich
+das reproduzierbare Tauri-Bundle fuer Linux (AppImage und .deb) ohne
+Gate-Lauf und ist fuer manuelle Release-Vorbereitung gedacht; alle
+drei Targets sind Pflicht gemaess `GG-NFA-INSTALL-005`.
 
 ### 2.6 Container-Build
 

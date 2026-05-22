@@ -107,9 +107,21 @@ begruenden.
 
 ### GG-LESE-007 - ASCII-Schreibweise
 
-Das Dokument verwendet eine reine ASCII-Schreibweise. Deutsche Umlaute werden
-als `ae`, `oe`, `ue` geschrieben, `ß` als `ss`. Diese Konvention gilt fuer
-alle Beitraege und ist beim Lektorat zu beachten.
+Das Dokument verwendet eine reine ASCII-Schreibweise fuer
+Sprachzeichen. Deutsche Umlaute werden als `ae`, `oe`, `ue`
+geschrieben, `ß` als `ss`. Diese Konvention gilt fuer alle Beitraege
+und ist beim Lektorat zu beachten.
+
+Typografische Zeichen ausserhalb des ASCII-Bereichs sind erlaubt,
+soweit sie keine Sprachzeichen ersetzen:
+
+- Em-Dash (`—`) als typografischer Gedankenstrich; die ASCII-Variante
+  `--` ist gleichwertig zulaessig.
+- Pfeile in Diagrammen (`→`, `↓`, `▶`).
+- Unicode-Box-Drawing-Zeichen in ASCII-Art-Diagrammen.
+
+Diese Klausel gilt sinngemaess auch fuer die Dokumente unter
+`docs/plan/` (siehe ADR 0001 §2.5).
 
 ### GG-LESE-008 - Verhaeltnis zu einem Pflichtenheft
 

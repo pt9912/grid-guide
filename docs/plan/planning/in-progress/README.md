@@ -2,16 +2,14 @@
 
 Aktive Slice-Plaene und Roadmap-Dokumente. Jeder Eintrag muss
 Akzeptanzkriterien und einen Verifikationspfad enthalten (siehe
-[`ADR 0001`](../../adr/0001-documentation-and-planning-structure.md) §4).
+[`ADR 0001`](../../adr/0001-documentation-and-planning-structure.md)
+§4).
 
-Lebenszyklus:
+Lebenszyklus und Verzeichnisstruktur sind in
+[`ADR 0001`](../../adr/0001-documentation-and-planning-structure.md)
+§2.1 definiert.
 
-```text
-open/  →  next/  →  in-progress/  →  done/
-                                   ↘ archive/
-```
-
-Konvention:
+## Konvention fuer Eintraege
 
 - Roadmap-Dokumente nutzen sprechende Namen (z. B. `roadmap.md`,
   `M1-mvp-kern.md`).

@@ -297,8 +297,8 @@ Themen, die nach M8 in eigenen Meilensteinen entstehen koennen:
 
 - **OCR fuer eingescannte Dokumente** (`GG-AI-005`).
 - **Direkte LLM-Anbindung** (`GG-AI-004`).
-- **Formularvorbefuellung** (`GG-FA-FILL-001`,
-  `GG-MOD-005`/`-006`).
+- **Formularvorbefuellung** (`GG-FA-FILL-001`, `GG-MOD-005`) plus
+  **vorbefuellter PDF-/XLSX-Export** (`GG-MOD-006`-V1-Erweiterung).
 - **Weitere Betreiberprofile** (`GG-FA-CAT-002`, `GG-FA-CAT-004`,
   `GG-FA-CAT-005`).
 - **SQLite-Persistenz** statt Dateisystem (`GG-ARCH-008`).

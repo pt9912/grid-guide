@@ -8,8 +8,7 @@
 [Lastenheft](../../../spec/lastenheft.md) (`GG-PE-003`,
 `GG-NFA-INSTALL-001`, `GG-NFA-INSTALL-002`, `GG-NFA-INSTALL-004`,
 `GG-NFA-INSTALL-005`, `GG-NFA-QG-001` bis `GG-NFA-QG-005`,
-`GG-NFA-CICD-001` bis `GG-NFA-CICD-004`, `GG-DATA-003`,
-`GG-NFA-SEC-001`)
+`GG-NFA-CICD-001` bis `GG-NFA-CICD-004`, `GG-NFA-SEC-001`)
 **Aenderungstyp:** Greenfield-ADR. Konkretisiert die mit Lastenheft
 v0.4.0 neu aufgenommenen `GG-NFA-CICD-*`-Anforderungen mit einer
 konkreten CI-Plattform und Action-Wahl. Wird auf `Accepted` gehoben,
@@ -103,10 +102,12 @@ sind im Workflow als eigener Schritt sichtbar und nicht in
 ist fuer Build/Bundle-Schritte gedacht, nicht fuer das gesamte
 Test-Tooling.
 
-Im Release-Workflow:
+Im Release-Workflow (SHA-Pin gemaess Versions-Pin-Regel unten;
+`<sha>` wird beim Skelett-Build durch den aktuellen Tauri-Action-
+Release-SHA ersetzt):
 
 ```yaml
-- uses: tauri-apps/tauri-action@v0
+- uses: tauri-apps/tauri-action@<sha>  # tauri-action v0.x.x
   env:
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -119,7 +120,8 @@ Im Release-Workflow:
 ```
 
 Versions-Pin: die Action wird auf einen SHA gepinnt, nicht auf
-`@v0`-Floating-Tag (Dependabot-/Renovate-Pflege spaeter).
+`@v0`-Floating-Tag (Dependabot-/Renovate-Pflege spaeter). Der
+Kommentar nach dem SHA traegt die menschenlesbare Version.
 
 ### 2.5 Secret-Handling
 
