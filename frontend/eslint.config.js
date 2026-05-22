@@ -6,9 +6,9 @@ import prettier from 'eslint-config-prettier';
 export default [
   js.configs.recommended,
   ...tseslint.configs.recommended,
-  ...svelte.configs['flat/recommended'],
+  ...svelte.configs.recommended,
   prettier,
-  ...svelte.configs['flat/prettier'],
+  ...svelte.configs.prettier,
   {
     languageOptions: {
       ecmaVersion: 2024,
@@ -16,10 +16,12 @@ export default [
     }
   },
   {
-    files: ['**/*.svelte'],
+    files: ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'],
     languageOptions: {
       parserOptions: {
-        parser: tseslint.parser
+        parser: tseslint.parser,
+        projectService: true,
+        extraFileExtensions: ['.svelte']
       }
     }
   },
