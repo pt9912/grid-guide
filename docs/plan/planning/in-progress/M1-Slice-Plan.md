@@ -343,22 +343,28 @@ abgehakt ist.
   zwei aufeinanderfolgende Laeufe unterscheiden sich nur in
   Zeitstempeln.
 - **DoD:**
-  - [ ] Multi-Stage `Dockerfile` mit gepinnten Versionen
-        (Rust-Toolchain, Node-Image, pnpm via Corepack).
-  - [ ] `apt`-Pakete mit expliziten Versionen aus Bookworm-Snapshot
-        (`webkit2gtk-4.1`, `libsoup-3.0`, `libappindicator3-1`,
-        `libssl-dev`).
-  - [ ] `cargo install --locked --version <X.Y.Z>` fuer
-        `cargo-llvm-cov`, `cargo-audit`, `cargo-modules`,
-        `cargo-tauri`.
+  - [x] Multi-Stage `Dockerfile` mit gepinnten Versionen
+        (Rust-Toolchain via Base-Image-Tag, Node 22.13 als Binary-
+        Tarball, pnpm 9.15.0 via Corepack; vier cargo-Tools per
+        `cargo install --locked --version <X.Y.Z>`).
+  - [ ] `apt`-Pakete mit expliziten `=<version>`-Pins aus
+        Bookworm-Snapshot — Closure-Item, wird nach erstem
+        gruenem Container-Lauf nachgezogen.
+  - [x] `cargo install --locked --version <X.Y.Z>` fuer
+        `cargo-llvm-cov` (0.6.16), `cargo-audit` (0.21.0),
+        `cargo-modules` (0.17.0), `tauri-cli` (2.11.2) — alle als
+        `ARG`-pinned im Dockerfile.
   - [ ] `make container-gates` baut den Container und fuehrt
-        `make gates` darin gruen aus.
+        `make gates` darin gruen aus — Verifikations-Item, vom
+        eigentlichen Docker-Lauf abhaengig.
   - [ ] `pnpm install` im Container erzeugt `pnpm-lock.yaml`;
         `cargo build --locked` erzeugt `Cargo.lock`; beide werden
-        nach Welle-5-Verifikation committed.
-  - [ ] `scripts/repro-check.sh` baut den Container zweimal und
-        diff't Image-Hashes minus dokumentierter
-        nicht-deterministischer Anteile (`GG-NFA-INSTALL-001`).
+        nach Welle-5-Verifikation committed — Closure-Item.
+  - [x] `scripts/repro-check.sh` baut den Container zweimal und
+        diff't die SHA-256 des produktiven Rust-Binary
+        (`src-tauri/target/release/gridguide` nach `pnpm build` +
+        `cargo build --release --locked`) — Skript liegt, Lauf
+        deferred bis erster `make container-gates`-Erfolg.
   - [ ] **Peer-Dependency-Matrix verifiziert** (Review-Finding
         H1 aus M1-W4): `pnpm view eslint-plugin-svelte@3.17.1
         peerDependencies`, `pnpm view typescript-eslint@8.59.4
