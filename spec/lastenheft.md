@@ -1570,13 +1570,40 @@ Akzeptanz: Der Coverage-Report weist Branch-Coverage separat aus.
 
 Prioritaet: MVP
 
-Coverage darf nicht kuenstlich erzeugt werden.
+Coverage darf nicht kuenstlich erzeugt werden — weder durch
+inhaltsleere Tests noch durch unbegruendete Coverage-Excludes.
 
-Akzeptanz: Tests ohne fachliche Assertion, reine Getter-/Setter-
-Ausfuehrung und Snapshots ohne Verhaltenspruefung gelten nicht als
-Qualitaetsnachweis. Code-Review weist solche Tests zurueck oder
-markiert sie explizit als reine Smoke-Tests ausserhalb der
-Coverage-Schwelle.
+Akzeptanz, Teil 1 (Testqualitaet): Tests ohne fachliche Assertion,
+reine Getter-/Setter-Ausfuehrung und Snapshots ohne
+Verhaltenspruefung gelten nicht als Qualitaetsnachweis. Code-Review
+weist solche Tests zurueck oder markiert sie explizit als reine
+Smoke-Tests ausserhalb der Coverage-Schwelle.
+
+Akzeptanz, Teil 2 (Excludes-Politik): Aus der Coverage-Messung
+duerfen ausschliesslich reine Daten- oder Domain-Strukturen ohne
+eigenes Behavior ausgenommen werden — typischerweise
+Datenmodell-Definitionen, deren gesamte Funktionalitaet aus
+`derive`-Makros oder strukturellen Felddeklarationen besteht.
+
+Nicht erlaubt sind Excludes fuer:
+
+- Adapter, Use-Cases, Tauri-Commands, sonstigen Behavior-tragenden
+  Code,
+- Re-Export-Module ohne eigene Logik (sie haben typischerweise
+  ohnehin null pruefbare Zeilen und beeinflussen die Coverage nicht;
+  ein expliziter Exclude ist unnoetig),
+- Layout-/Praesentationskomponenten (sind ueber Render-Smoke-Tests
+  pruefbar),
+- Boilerplate, Konfigurations- oder Wiring-Code.
+
+Jeder eingesetzte Exclude muss im Coverage-Report sichtbar
+ausgewiesen und im zugehoerigen Konfig-File (`coverage.toml`,
+`vitest.config.ts` o. ae.) mit einer einzeiligen Begruendung
+kommentiert sein.
+
+Schwellen aus GG-NFA-COV-001 und GG-NFA-COV-002 werden nicht
+abgesenkt, um Coverage zu „erreichen"; stattdessen wird der zu
+pruefende Code mit fachlich begruendeten Tests erweitert.
 
 ### GG-NFA-QG-001 - Coverage-Gate
 

@@ -155,23 +155,38 @@ abgehakt ist.
     Target existiert, ohne kritische Module zu pruefen — diese
     kommen in M2).
   - **Skelett-Coverage-Strategie** (siehe ADR 0004 §4-Punkt 2):
-    Die 80-%-Schwelle wird nicht abgesenkt; stattdessen wird das
-    Skelett so geformt, dass es sie erreicht:
+    Die 80-%-Schwelle wird nicht abgesenkt. Stattdessen wird das
+    Skelett so geformt, dass es sie erreicht — primaer ueber Tests,
+    nicht ueber Excludes.
+  - **Excludes-Politik** (eng gefasst):
+    - Erlaubt sind Excludes ausschliesslich fuer reine Daten- oder
+      Domain-Strukturen ohne Behavior — Rust-`struct`/`enum`-
+      Definitionen in `hexagon/core/domain`, deren Logik
+      vollstaendig aus `derive`-Makros besteht (z. B.
+      `#[derive(Debug, Clone, PartialEq)]`) und die keine eigenen
+      `impl`-Methoden tragen.
+    - **Nicht erlaubt** sind Excludes fuer Re-Export-`mod.rs`,
+      Layout-Komponenten, Boilerplate, Adapter, Use-Cases oder
+      sonstigen Behavior-tragenden Code. Diese sind testbar und
+      muessen getestet werden.
+    - Begruendung: Lastenheft `GG-NFA-COV-004` verbietet kuenstliche
+      Coverage. Datenklassen ohne Behavior haben keine pruefbare
+      Logik (Tests waeren Trivialitaeten); Re-Exporte und Layouts
+      koennen sehr wohl getestet werden (Render-Smoke,
+      Build-Compilation) und sind damit Pflicht-Coverage-Basis.
+  - **Konkreter Plan fuer M1-Skelett:**
     - Rust: `greet`-Command aus Welle 1 erhaelt einen Unit-Test, der
-      die Funktion vollstaendig ausuebt. Reine Re-Export-Module
-      (`mod.rs` mit ausschliesslich `pub mod x;`-Zeilen, ohne eigene
-      Logik) werden in `.cargo/config.toml` bzw. `coverage.toml`
-      ueber ein Exclude-Pattern (`hexagon/**/mod.rs`) von der
-      Messung ausgenommen, bis sie eigene Logik tragen.
+      die Funktion vollstaendig ausuebt. Leere `mod.rs` mit
+      ausschliesslich `pub mod x;`-Zeilen tragen 0 executable lines
+      und beeinflussen die Coverage-Basis nicht (kein Exclude
+      notwendig).
     - Frontend: `+page.svelte` aus Welle 2 erhaelt einen
-      Komponententest via `@testing-library/svelte` (Render-Smoke,
-      Button-Click). Reine Layout-Komponenten ohne Logik werden in
-      `vitest.config.ts` per `coverage.exclude` ausgeschlossen,
-      analog Rust-Re-Exports.
-    - Begruendung der Excludes: Lastenheft `GG-NFA-COV-004` erlaubt
-      keine kuenstliche Coverage; Re-Export-/Layout-only-Module
-      enthalten keine pruefbare Logik und gehoeren explizit nicht in
-      die Coverage-Basis.
+      Komponententest via `@testing-library/svelte` (Render-Smoke
+      plus Button-Click-Pfad).
+    - Falls die 80-%-Schwelle mit diesem Mindestumfang nicht
+      erreichbar ist, wird der Skelett-Code mit weiteren einfachen,
+      fachlich begruendeten Tests erweitert — gemaess ADR 0004
+      §4-Punkt 2.
 - **Verifikation:** `make arch-check` gruen im Default; mit
   `ARCH_CHECK_FIXTURES=on make arch-check` rot. `make coverage-rust`
   und `make coverage-frontend` gruen mit `--fail-under-lines 80` bzw.

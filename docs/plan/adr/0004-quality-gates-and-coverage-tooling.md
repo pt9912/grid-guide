@@ -111,6 +111,12 @@ zusammengefuehrt, weil sie unterschiedliche Runtimes messen. Jedes
 Stack-Target gated unabhaengig; `make gates` schlaegt fehl, wenn
 **ein** Stack die Schwelle reisst.
 
+Excludes folgen der engen Excludes-Politik aus
+`GG-NFA-COV-004`-Teil 2 (nur Daten-/Domain-Strukturen ohne eigenes
+Behavior). Jeder Exclude steht im jeweiligen Konfig-File mit
+einzeiliger Begruendung; Re-Export-Module, Layout-Komponenten,
+Adapter und Use-Cases sind explizit **nicht** excludable.
+
 ### 2.5 Quality-Gates-Mapping
 
 | Lastenheft-Anforderung           | Build-Schritt in `make gates`                              |
