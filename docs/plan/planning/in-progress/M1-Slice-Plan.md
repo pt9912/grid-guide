@@ -317,7 +317,7 @@ abgehakt ist.
     - Base auf konkreter Rust-Toolchain-Version
       (z. B. `rust:1.95-bookworm`); Node-Version per
       `actions/setup-node`-Aequivalent in der Frontend-Stage
-      (z. B. `node:24.14-bookworm-slim`); pnpm via `corepack
+      (z. B. `node:24.16-bookworm-slim`); pnpm via `corepack
       enable pnpm@<version>` pinned.
     - Stage `build-deps`: `apt-get install` mit
       `--no-install-recommends` und expliziten Versionen
@@ -349,7 +349,7 @@ abgehakt ist.
   Zeitstempeln.
 - **DoD:**
   - [x] Multi-Stage `Dockerfile` mit gepinnten Versionen
-        (Rust 1.95.0 via rustup auf node:24.14-bookworm-slim als
+        (Rust 1.95.0 via rustup auf node:24.16-bookworm-slim als
         Basis, pnpm 9.15.0 via Corepack; vier cargo-Tools per
         `cargo install --locked --version <X.Y.Z>`).
   - [ ] `apt`-Pakete mit expliziten `=<version>`-Pins aus
