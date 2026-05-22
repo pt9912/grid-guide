@@ -797,8 +797,13 @@ Konkrete Minor- und Patch-Versionsfestlegungen erfolgen in den Manifesten
 (`Cargo.toml`, `package.json`) und in begleitenden ADRs, nicht im
 Lastenheft; das Lastenheft schreibt nur die Major-Linie vor.
 
-Akzeptanz: Stack-Entscheidungen sind im Repository als ADR oder in
-`docs/architecture.md` dokumentiert; Abweichungen sind begruendet.
+Belegende ADRs:
+
+- `docs/plan/adr/0002-frontend-stack-sveltekit.md` - SvelteKit-Mindestversion.
+- `docs/plan/adr/0003-desktop-runtime-tauri.md` - Tauri-Mindestversion.
+
+Akzeptanz: Stack-Entscheidungen sind im Repository als ADR unter
+`docs/plan/adr/` dokumentiert; Abweichungen sind begruendet.
 
 ---
 
@@ -1474,7 +1479,7 @@ Dokumenten oder Links. Vorbefuellte PDF-/XLSX-Formulare bleiben V1.
 Status: entschieden
 
 Der MVP verwendet SvelteKit im Single-Page-Modus als Frontend (siehe
-GG-ARCH-008).
+GG-ARCH-008 und `docs/plan/adr/0002-frontend-stack-sveltekit.md`).
 
 ### GG-DEC-005 - Open-Source-Lizenz
 
