@@ -359,6 +359,13 @@ abgehakt ist.
   - [ ] `scripts/repro-check.sh` baut den Container zweimal und
         diff't Image-Hashes minus dokumentierter
         nicht-deterministischer Anteile (`GG-NFA-INSTALL-001`).
+  - [ ] **Peer-Dependency-Matrix verifiziert** (Review-Finding
+        H1 aus M1-W4): `pnpm view eslint-plugin-svelte@3.17.1
+        peerDependencies`, `pnpm view typescript-eslint@8.59.4
+        peerDependencies`, `pnpm view eslint-config-prettier@10.2.0
+        peerDependencies` zeigen Kompatibilitaet mit ESLint 10.4.0.
+        Bei Bruch: `pnpm.overrides` oder Downgrade auf ESLint 9.x;
+        Beschluss als ADR-0004-Schaerfung dokumentieren.
 
 ### Welle 6 — GitHub-Actions-CI-Matrix
 

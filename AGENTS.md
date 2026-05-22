@@ -83,10 +83,10 @@ Lokal und in CI:
 Pre-commit-Hooks sind optional; die Gates muessen unabhaengig
 reproduzierbar laufen.
 
-## Branch-Protection (M1-Welle 6 nachgepflegt)
+## Branch-Protection (aktiv ab M1-Welle 6)
 
-Bis Welle 6 keine harte Branch-Protection erforderlich. Nach
-Welle 6 gilt:
+**Vor M1-Welle 6 nicht aktiv**, weil noch kein
+`.github/workflows/gates.yml` existiert. Nach Welle 6 gilt:
 
 - Linux-Job aus `.github/workflows/gates.yml` ist Required-Check
   ([`GG-NFA-CICD-002`](spec/lastenheft.md)).
