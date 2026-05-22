@@ -6,7 +6,7 @@
 | Kurzbeschreibung | Desktop-Assistent zur Vorbereitung vollstaendiger Netz- und Behoerdenantraege |
 | Zielplattform    | Tauri Desktop-App, lokale Dokumentverarbeitung                                |
 | Hauptnutzer      | Installateure, Antragsteller, Projektentwickler                               |
-| Version          | 0.3.1                                                                         |
+| Version          | 0.3.2                                                                         |
 | Status           | Entwurf                                                                       |
 | Datum            | 2026-05-22                                                                    |
 
@@ -73,10 +73,11 @@ Bereiche umfassen `LESE`, `ZB`, `PE`, `PUE`, `MOD`, `MVP`, `FA-CAT`,
 `FA-PROJ`, `FA-DOC`, `FA-VAL`, `FA-FILL`, `FA-EXPORT`, `FA-SRC`, `NONGOAL`,
 `ARCH`, `DATA`, `AI`, `NFA-SEC`, `NFA-USE`, `NFA-MAINT`, `NFA-TEST`,
 `NFA-PERF`, `NFA-INSTALL`, `NFA-LOG`, `NFA-BACKUP`, `NFA-I18N`, `NFA-A11Y`,
-`LIC`, `ACCEPT`, `RISK`, `ASSUMP`, `DEC`, `OPEN`.
+`LIC`, `ACCEPT`, `RISK`, `ASSUMP`, `DEC`.
 
-`DEC` bezeichnet getroffene MVP-Festlegungen, `OPEN` bleibt fuer noch nicht
-entschiedene Punkte reserviert, `ASSUMP` fuer dokumentierte Annahmen.
+`DEC` bezeichnet getroffene MVP-Festlegungen, `ASSUMP` dokumentierte
+Annahmen. Ein Bereich `OPEN` fuer noch nicht entschiedene Punkte kann bei
+Bedarf in einer spaeteren Fassung ergaenzt werden.
 
 ### GG-LESE-006 - Identifier-Konvention fuer Vokabulare
 
@@ -97,6 +98,21 @@ Sprachkonvention, um Code-Identifier und UI-Bezeichner sauber zu trennen:
 
 Erweiterungen muessen sich an diese Konvention halten oder die Abweichung
 begruenden.
+
+### GG-LESE-007 - ASCII-Schreibweise
+
+Das Dokument verwendet eine reine ASCII-Schreibweise. Deutsche Umlaute werden
+als `ae`, `oe`, `ue` geschrieben, `ß` als `ss`. Diese Konvention gilt fuer
+alle Beitraege und ist beim Lektorat zu beachten.
+
+### GG-LESE-008 - Verhaeltnis zu einem Pflichtenheft
+
+Das Dokument fixiert in Kapitel 7 (Architektur) bewusst auch Loesungsanteile
+verbindlich (Tauri, hexagonale Struktur, Rust, SvelteKit, Paketformate). Es
+ist damit groesser geschnitten als ein klassisches Lastenheft und nimmt
+Teile eines Pflichtenhefts vorweg. Auftraggeber und Auftragnehmer fallen im
+MVP zusammen; diese Festlegungen sind daher beabsichtigt und gelten als
+Anforderungen mit Belegtyp `ARCH-*` gemaess GG-LESE-002.
 
 ---
 
@@ -385,25 +401,27 @@ Prioritaet: MVP fuer Westnetz; V1 fuer alle weiteren Quellen.
 
 Das Produkt muss das Westnetz-Profil im MVP produktiv unterstuetzen und soll
 die weiteren in der Tabelle gelisteten Profile in V1 unterstuetzen. Die
-Spalte `Abnahme` ist der kanonische Auspraegungsstatus pro Profil.
+Spalte `Abnahmestand` ist der kanonische Auspraegungsstatus pro Profil. Die
+Liste deckt dieselbe Quellen-Traegermenge ab wie GG-FA-CAT-004; die
+Sortierung dort folgt der V1-internen Umsetzungsreihenfolge.
 
-| Abnahme | Quelle                     |
-| ------- | -------------------------- |
-| MVP     | Westnetz                   |
-| V1      | Bayernwerk                 |
-| V1      | Netze BW                   |
-| V1      | N-ERGIE Netz               |
-| V1      | SWM Infrastruktur          |
-| V1      | 50Hertz                    |
-| V1      | Amprion                    |
-| V1      | TransnetBW                 |
-| V1      | TenneT Germany             |
-| V1      | Bundesnetzagentur          |
-| V1      | Marktstammdatenregister    |
-| V1      | Landesfinanzverwaltungen   |
-| V1      | BDEW                       |
-| V1      | netztransparenz.de         |
-| V1      | 4-UE-NB-Reifegradverfahren |
+| Abnahmestand | Quelle                     |
+| ------------ | -------------------------- |
+| MVP          | Westnetz                   |
+| V1           | Bayernwerk                 |
+| V1           | Netze BW                   |
+| V1           | N-ERGIE Netz               |
+| V1           | SWM Infrastruktur          |
+| V1           | 50Hertz                    |
+| V1           | Amprion                    |
+| V1           | TransnetBW                 |
+| V1           | TenneT Germany             |
+| V1           | Bundesnetzagentur          |
+| V1           | Marktstammdatenregister    |
+| V1           | Landesfinanzverwaltungen   |
+| V1           | BDEW                       |
+| V1           | netztransparenz.de         |
+| V1           | 4-UE-NB-Reifegradverfahren |
 
 ### GG-FA-CAT-003 - Katalogbasierte Startprofile
 
@@ -423,22 +441,26 @@ Prioritaet: V1
 Das Produkt soll die im PDF-Katalog priorisierten Quellen als Profile
 unterstuetzen. Die Spalte `Reihenfolge` beschreibt die V1-interne
 Umsetzungsreihenfolge und ist unabhaengig vom MVP/V1-Prioritaetsschema dieses
-Dokuments (siehe GG-LESE-001).
+Dokuments (siehe GG-LESE-001). Die Traegermenge entspricht der Liste aus
+GG-FA-CAT-002.
 
-| Reihenfolge | Quelle                    | Kataloghinweis                                                    | Typischer Zugang              |
-| ----------- | ------------------------- | ----------------------------------------------------------------- | ----------------------------- |
-| 1           | Bayernwerk                | Speicher, Verguetung, Messkonzepte, MS/HS                         | Portal + PDF                  |
-| 2           | Westnetz                  | E.1/E.8/E.11, TAB-/VDE-Formulare, Abrechnung                      | PDF + Portal                  |
-| 3           | Netze BW                  | PV ab 135 kW, Messkonzept, technische Aenderungen                 | PDF + Kundenportal            |
-| 4           | N-ERGIE Netz              | E.2/E.3/E.8, Einspeiseart, Veraeusserungsform, Steckersolar       | PDF + Online-Service          |
-| 5           | SWM Infrastruktur         | Erzeugungsanlagen, Inbetriebsetzung, Steuer-/Verguetungsformulare | PDF + Portale                 |
-| 6           | 50Hertz                   | Reifegradverfahren, Netzanschlussdokumente, 4-UE-NB-Formulare     | PDF + XLSX + HTML             |
-| 7           | Amprion                   | Onshore-EE-Prozess, Checkliste, NDA, Zeitplan, Vertragsmuster     | PDF + HTML                    |
-| 8           | TransnetBW                | Reifegrad-PDFs, BESS-Mustervertrag, TAB HoeS                      | PDF + XLSX + HTML             |
-| 9           | TenneT Germany            | KraftNAV, Netzanschlussregeln, weniger oeffentliche Formulare     | PDF + gemeinsame 4-UE-NB-Doku |
-| 10          | Bundesnetzagentur / MaStR | Registrierungshilfen, Ausschreibungs- und Zahlungsformulare       | PDF + Online-Register         |
-| 11          | BDEW                      | Redispatch, Ausfallarbeit, Branchenprozesse                       | PDF + Fachseiten              |
-| 12          | Landesfinanzverwaltungen  | Bayern/NRW mit PV-PDFs, sonst ELSTER-/Formularindex               | PDF + ELSTER                  |
+| Reihenfolge | Quelle                     | Kataloghinweis                                                    | Typischer Zugang              |
+| ----------- | -------------------------- | ----------------------------------------------------------------- | ----------------------------- |
+| 1           | Bayernwerk                 | Speicher, Verguetung, Messkonzepte, MS/HS                         | Portal + PDF                  |
+| 2           | Westnetz                   | E.1/E.8/E.11, TAB-/VDE-Formulare, Abrechnung                      | PDF + Portal                  |
+| 3           | Netze BW                   | PV ab 135 kW, Messkonzept, technische Aenderungen                 | PDF + Kundenportal            |
+| 4           | N-ERGIE Netz               | E.2/E.3/E.8, Einspeiseart, Veraeusserungsform, Steckersolar       | PDF + Online-Service          |
+| 5           | SWM Infrastruktur          | Erzeugungsanlagen, Inbetriebsetzung, Steuer-/Verguetungsformulare | PDF + Portale                 |
+| 6           | 50Hertz                    | Reifegradverfahren, Netzanschlussdokumente, 4-UE-NB-Formulare     | PDF + XLSX + HTML             |
+| 7           | Amprion                    | Onshore-EE-Prozess, Checkliste, NDA, Zeitplan, Vertragsmuster     | PDF + HTML                    |
+| 8           | TransnetBW                 | Reifegrad-PDFs, BESS-Mustervertrag, TAB HoeS                      | PDF + XLSX + HTML             |
+| 9           | TenneT Germany             | KraftNAV, Netzanschlussregeln, weniger oeffentliche Formulare     | PDF + gemeinsame 4-UE-NB-Doku |
+| 10          | Bundesnetzagentur          | Registrierungshilfen, Ausschreibungs- und Zahlungsformulare       | PDF + Online-Register         |
+| 11          | Marktstammdatenregister    | Online-Register, PDF-Registrierungshilfen                         | OnlineRegister + PDF          |
+| 12          | BDEW                       | Redispatch, Ausfallarbeit, Branchenprozesse                       | PDF + Fachseiten              |
+| 13          | Landesfinanzverwaltungen   | Bayern/NRW mit PV-PDFs, sonst ELSTER-/Formularindex               | PDF + ELSTER                  |
+| 14          | netztransparenz.de         | EEG-/Redispatch-Sonderfaelle, Umsetzungshilfen                    | PDF + XLSX                    |
+| 15          | 4-UE-NB-Reifegradverfahren | Gemeinsame UE-NB-Formulare F.1-F.6                                | PDF + XLSX                    |
 
 ### GG-FA-CAT-005 - XLSX-Katalogprofile
 
@@ -458,8 +480,8 @@ Wichtige XLSX-Gruppen:
 - MaStR-Hilfsdateien als Hilfsdaten, nicht als Einreichungsformular.
 
 Akzeptanz: XLSX-Quellen werden nicht pauschal als klassische Antragsformulare
-behandelt, sondern nach Zweck als Formular, Hilfsdatei, Stammdatendatei,
-Redispatch-Datei oder Branchenhilfe klassifiziert.
+behandelt, sondern nach Zweck gemaess dem Vokabular `XlsxZweck` (siehe
+GG-DATA-004) klassifiziert.
 
 ### GG-FA-CAT-006 - Portal-only- und Nicht-PDF-/Nicht-XLSX-Markierung
 
@@ -524,7 +546,8 @@ Mindestens zu erfassen sind:
   Speicher-Flag wird nicht gefuehrt.
 - installierte Leistung in kWp.
 - Messkonzept (optionales Feld; verpflichtend, sobald der Falltyp ein
-  Messkonzept verlangt, siehe GG-FA-VAL-003).
+  Messkonzept verlangt, siehe GG-FA-VAL-003). Fuer den MVP-Demo-Falltyp
+  `PV_NS_OhneSpeicher` ist `Messkonzept` Pflicht (siehe GG-DEC-002).
 - Netzbetreiberprofil.
 - Falltyp aus dem Vokabular `Falltyp` (siehe GG-DATA-004).
 
@@ -611,11 +634,19 @@ Das Paket muss mindestens enthalten:
 - Warnungen und offene Punkte gemaess GG-FA-VAL-001 bis GG-FA-VAL-003.
 - referenzierte nutzereigene Dokumente.
 - Links auf offizielle Quellen anstelle kopierter Originalformulare ohne
-  offene Lizenz (siehe GG-FA-CAT-007 und GG-NONGOAL-004).
-- Profilversion gemaess GG-DATA-005 (enthaelt `source_url` und
-  `retrieved_at` und ist damit zugleich Quellennachweis).
+  offene Lizenz (siehe GG-FA-CAT-007 und GG-NONGOAL-004). Dies betrifft
+  die einzelnen Formularlinks gemaess GG-FA-CAT-001.
+- Profilversion gemaess GG-DATA-005 (enthaelt `source_url` der
+  Katalog-/Profilquelle und `retrieved_at` und dient als Quellennachweis
+  fuer die verwendete Profilauspraegung).
 
 Das Paket darf keine Inhalte gemaess GG-DATA-003 enthalten.
+
+Override-Verhalten: Liegt mindestens eine Warnung mit Schweregrad `fehler`
+vor, ist der Export gemaess GG-NFA-USE-001 standardmaessig gesperrt. Wird er
+ueber die dort beschriebene Override-Bestaetigung dennoch erzeugt, muss das
+Exportpaket im Manifest die Override-Bestaetigung (Zeitpunkt, betroffene
+Warnungs-IDs) sichtbar dokumentieren und die betroffenen Fehler markieren.
 
 ### GG-FA-SRC-001 - Quellenstatus
 
@@ -755,19 +786,16 @@ Prioritaet: MVP
 Das Produkt muss folgenden Technologie-Stack verwenden:
 
 - Backend des `src-tauri/`-Teils in **Rust** (aktuelle stabile Edition).
-- **Tauri 2.x** als Desktop-Runtime; die jeweils aktuelle Minor-Version wird
-  verwendet, Mindestversion zum Zeitpunkt dieser Lastenheft-Fassung ist
-  Tauri 2.11.
-- Frontend-Framework: **SvelteKit 2.x** im Single-Page-Modus; Mindestversion
-  zum Zeitpunkt dieser Lastenheft-Fassung ist SvelteKit 2.60. Abweichungen
-  sind als Architekturentscheid zu dokumentieren (siehe GG-DEC-004).
+- **Tauri 2.x** als Desktop-Runtime.
+- Frontend-Framework: **SvelteKit 2.x** im Single-Page-Modus (siehe
+  GG-DEC-004). Abweichungen sind als Architekturentscheid zu dokumentieren.
 - Paketierung als Tauri-Bundle fuer Linux (AppImage und .deb).
 - Persistenz im MVP als lokale Dateien im Nutzerprofil; eine eingebettete
   Datenbank (z. B. SQLite) ist V1.
 
-Konkrete Patch- und Minor-Versionsfestlegungen erfolgen in den Manifesten
-(`Cargo.toml`, `package.json`) und nicht hier; das Lastenheft schreibt nur
-die Major-Linie vor.
+Konkrete Minor- und Patch-Versionsfestlegungen erfolgen in den Manifesten
+(`Cargo.toml`, `package.json`) und in begleitenden ADRs, nicht im
+Lastenheft; das Lastenheft schreibt nur die Major-Linie vor.
 
 Akzeptanz: Stack-Entscheidungen sind im Repository als ADR oder in
 `docs/architecture.md` dokumentiert; Abweichungen sind begruendet.
@@ -815,9 +843,19 @@ Pflichtfelder pro Wert:
 - `confirmed_by_user`: `true` oder `false`.
 
 Akzeptanz: Werte mit `status = confirmed` haben `confirmed_by_user = true`.
-Werte mit `extraction_method = manual` muessen `confidence = null` setzen.
-Bei anderen Extraktionsmethoden ohne ermittelbare Konfidenz wird ebenfalls
-`confidence = null` gesetzt.
+Werte mit `extraction_method = manual` muessen `confidence = null` setzen
+und tragen `status = confirmed` mit `confirmed_by_user = true` (die
+manuelle Eingabe gilt als Bestaetigung). Bei anderen Extraktionsmethoden
+ohne ermittelbare Konfidenz wird ebenfalls `confidence = null` gesetzt.
+
+Erlaubte Status-Uebergaenge:
+
+- Initial gesetzt durch Extraktion: `extracted` oder `suggested`.
+- Initial gesetzt durch Nutzer: `confirmed` (bei `manual`).
+- `extracted` darf nach `suggested`, `confirmed` oder `rejected` wechseln.
+- `suggested` darf nach `confirmed` oder `rejected` wechseln.
+- `confirmed` und `rejected` sind Endzustaende. Ein erneuter Wechsel
+  erfordert einen neuen Wert mit eigener Herkunft.
 
 ### GG-DATA-003 - Secrets ausserhalb von Projektdaten
 
@@ -827,8 +865,11 @@ Das Produkt darf keine API-Schluessel, Portalpasswoerter oder sonstige Secrets
 in Projektdateien oder Exportpakete schreiben.
 
 Soweit Secrets fuer optionale LLM- oder Online-Funktionen benoetigt werden,
-muessen sie ueber den Secret-Store des Betriebssystems (z. B. Secret Service
-unter Linux) verwaltet werden.
+muessen sie ueber den Secret-Store des Betriebssystems verwaltet werden:
+
+- Linux: Secret Service (z. B. via libsecret/GNOME Keyring oder KWallet).
+- macOS (Sekundaerumgebung gemaess GG-PE-003): Keychain.
+- Windows (Sekundaerumgebung gemaess GG-PE-003): Windows Credential Manager.
 
 Akzeptanz: Ein Export eines Demo-Projekts mit konfiguriertem LLM-Adapter
 enthaelt keinen API-Schluessel; die Projektdatei enthaelt keinen Klartext-
@@ -908,6 +949,14 @@ bereitstellen. Erweiterungen sind als V1-Aenderung moeglich.
 - `Steuerformular`.
 - `Unbekannt`.
 
+`XlsxZweck` (Klassifikation von XLSX-Quellen gemaess GG-FA-CAT-005):
+
+- `Formular`.
+- `Hilfsdatei`.
+- `Stammdatendatei`.
+- `RedispatchDatei`.
+- `Branchenhilfe`.
+
 ### GG-DATA-005 - Profilversionierung
 
 Prioritaet: MVP
@@ -916,11 +965,18 @@ Das Produkt muss pro Profil und Regelsatz eine `Profilversion` fuehren.
 
 Pflichtfelder pro Profilversion:
 
-- `version_id`: kalender- oder semver-basierter Bezeichner (Empfehlung:
-  `YYYY-MM-DD` oder `MAJOR.MINOR`).
+- `version_id`: kalenderbasierter Bezeichner im Format `YYYY-MM-DD` (siehe
+  unten).
 - `retrieved_at`: ISO-Datum des letzten Quellenabrufs.
-- `source_url`: URL der Katalog- oder Originalquelle.
+- `source_url`: URL der Katalog- oder Profilquelle, aus der die
+  Profilversion abgeleitet wurde. `source_url` bezeichnet **nicht** die
+  einzelnen Formularlinks aus GG-FA-CAT-001 - diese werden weiterhin als
+  Liste am Profil gefuehrt.
 - `notes`: optionaler Freitext.
+
+`version_id` wird bewusst kalenderbasiert (`YYYY-MM-DD`) gefuehrt, da
+katalogbasierte Profile keine semver-konforme Stabilitaetszusage geben und
+das Abrufdatum die natuerliche Versionierungsachse ist.
 
 Akzeptanz: Jede Warnung und jeder Eintrag im Exportpaket laesst sich auf eine
 konkrete `Profilversion` zurueckfuehren.
@@ -961,13 +1017,35 @@ Der Prompt muss mindestens enthalten:
 Das Antwortformat muss fuer die Rueckuebernahme geeignet sein. Fuer den MVP
 ist mindestens eines der folgenden Formate zulaessig:
 
-- JSON mit festen Schluesseln `missing_fields`, `missing_documents`,
-  `plausibility_warnings`, `suggested_values`, `questions`.
+- JSON gemaess dem unten beschriebenen Schema.
 - Markdown mit festen Abschnitten fuer fehlende Felder, fehlende Unterlagen,
-  Plausibilitaetswarnungen, vorgeschlagene Werte und Rueckfragen.
+  Plausibilitaetswarnungen, vorgeschlagene Werte und Rueckfragen, die sich
+  auf dasselbe logische Schema abbilden lassen.
 
 Die Promptschluessel und Antwortformat-Bezeichner sind technische
 Schnittstellenidentifier gemaess GG-LESE-006.
+
+JSON-Schema (informell, MVP-Mindestumfang):
+
+```text
+Antwort: Objekt mit Pflichtschluesseln
+  missing_fields        : Liste<MissingField>
+  missing_documents     : Liste<MissingDocument>
+  plausibility_warnings : Liste<PlausibilityWarning>
+  suggested_values      : Liste<SuggestedValue>
+  questions             : Liste<String>
+
+MissingField         : { field: String, reason: String? }
+MissingDocument      : { document_type: String, reason: String? }
+PlausibilityWarning  : { severity: "info"|"warnung"|"fehler",
+                         field: String?, message: String }
+SuggestedValue       : { field: String, value: String|Number|Boolean,
+                         source_excerpt: String? }
+```
+
+Leere Listen sind zulaessig; fehlende Pflichtschluessel sind unzulaessig.
+Eine maschinenlesbare Schemaspezifikation (z. B. JSON Schema) liegt als
+Abnahmeartefakt gemaess GG-ACCEPT-004 im Repository.
 
 Akzeptanz:
 
@@ -1380,6 +1458,8 @@ Status: entschieden
 
 Der MVP startet mit dem Falltyp `PV_NS_OhneSpeicher`: PV-Anlage im
 Niederspannungsbereich bis 30 kWp ohne Speicher mit Ueberschusseinspeisung.
+Fuer diesen Falltyp ist ein `Messkonzept` Pflichtangabe und
+Pflichtunterlage (siehe GG-FA-PROJ-001, GG-FA-VAL-003, GG-MVP-006).
 
 ### GG-DEC-003 - Erster Output
 
@@ -1404,7 +1484,10 @@ GridGuide wird unter der MIT-Lizenz veroeffentlicht (siehe GG-LIC-001).
 
 ---
 
-## 15. Traceability-Start
+## 15. Traceability
+
+Die Matrix deckt alle bisher vergebenen Anforderungs-IDs ab. Jede neue
+Anforderung muss bei ihrer Aufnahme einer Themenzeile zugeordnet werden.
 
 | Thema                       | Lastenheft-Anforderungen                                                 |
 | --------------------------- | ------------------------------------------------------------------------ |
@@ -1412,15 +1495,20 @@ GridGuide wird unter der MIT-Lizenz veroeffentlicht (siehe GG-LIC-001).
 | Lokale Tauri-App            | GG-MVP-001, GG-ARCH-001, GG-ARCH-008                                     |
 | Hexagonale Architektur      | GG-ARCH-002 bis GG-ARCH-006                                              |
 | DDD-Zuschnitt               | GG-ARCH-007, GG-DATA-001                                                 |
-| Projektpersistenz           | GG-FA-PROJ-001, GG-FA-PROJ-002, GG-NFA-BACKUP-001                        |
+| Projektpersistenz           | GG-FA-PROJ-001, GG-FA-PROJ-002, GG-NFA-BACKUP-001, GG-NFA-BACKUP-002     |
 | Dokumentanalyse             | GG-MVP-005, GG-MVP-006, GG-FA-DOC-001                                    |
 | Checklisten und Validierung | GG-MVP-004, GG-FA-VAL-001 bis GG-FA-VAL-003, GG-NFA-USE-001              |
-| Exportpaket                 | GG-MVP-007, GG-FA-EXPORT-001                                             |
-| KI als Vorschlagssystem     | GG-MVP-009, GG-AI-001, GG-AI-002, GG-DATA-002, GG-ACCEPT-004             |
+| Exportpaket                 | GG-MVP-007, GG-FA-EXPORT-001, GG-FA-FILL-001                             |
+| KI als Vorschlagssystem     | GG-MVP-009, GG-AI-001 bis GG-AI-005, GG-DATA-002, GG-ACCEPT-004          |
 | Portal-only-Abgrenzung      | GG-MVP-008, GG-FA-CAT-006, GG-NONGOAL-002, GG-RISK-002                   |
 | Lizenz-/Nachnutzungsstatus  | GG-FA-CAT-007, GG-NONGOAL-004, GG-LIC-001, GG-LIC-002, GG-RISK-003       |
-| Lokale Verarbeitung         | GG-NFA-SEC-001, GG-NFA-SEC-002, GG-NFA-LOG-002                           |
+| Lokale Verarbeitung         | GG-NFA-SEC-001, GG-NFA-SEC-002, GG-NFA-LOG-001, GG-NFA-LOG-002           |
 | Performance und Betrieb     | GG-NFA-PERF-001, GG-NFA-PERF-002, GG-NFA-INSTALL-001 bis GG-NFA-INSTALL-003 |
+| Erweiterbarkeit und Tests   | GG-NFA-MAINT-001, GG-NFA-TEST-001                                        |
+| Sprache und Barrierefreiheit| GG-NFA-I18N-001, GG-NFA-A11Y-001                                         |
+| Quellenstatus               | GG-FA-SRC-001, GG-DATA-005, GG-RISK-001                                  |
+| Vokabulare und Datenmodell  | GG-DATA-001 bis GG-DATA-005                                              |
+| Demo-Artefakte              | GG-ACCEPT-001 bis GG-ACCEPT-004                                          |
 | MVP-Entscheidungen          | GG-DEC-001 bis GG-DEC-005                                                |
 | Annahmen                    | GG-ASSUMP-001 bis GG-ASSUMP-005                                          |
 
@@ -1445,4 +1533,4 @@ GridGuide wird unter der MIT-Lizenz veroeffentlicht (siehe GG-LIC-001).
 | Override-Bestaetigung | explizite, protokollierte Nutzerentscheidung, einen Export trotz `fehler` zu erzeugen (siehe GG-NFA-USE-001) |
 | RequirementStatus  | Vokabular fuer den Status eines Anforderungseintrags (siehe GG-ACCEPT-003)           |
 | Driving Adapter    | Adapter, der Nutzer- oder API-Anfragen in den Hexagon-Kern bringt                    |
-| Driven Adapter     | Adapter fuer externe Systeme wie PDF, XLSX, OCR, Storage, HTTP oder LLM              |
+| Driven Adapter     | Adapter, ueber den der Hexagon-Kern externe Technik nutzt (PDF, XLSX, Dateisystem, HTTP, LLM) |
