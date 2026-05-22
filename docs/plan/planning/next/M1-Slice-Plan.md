@@ -105,8 +105,17 @@ abgehakt ist.
   - `src-tauri/tauri.conf.json`: Frontend-Build aus `frontend/build`,
     AppName `GridGuide`, Window-Titel deutsch.
   - `pnpm-lock.yaml` (oder `package-lock.json`) eingecheckt.
-- **Verifikation:** `pnpm install` (oder `npm ci`); `pnpm tauri dev`
-  startet ein Fenster mit Hello-Seite; Tastaturfokus sichtbar.
+- **Verifikation:**
+  - Primaer (headless-faehig, CI-tauglich): `pnpm install` (oder
+    `npm ci`); `pnpm tauri build` erzeugt ein Bundle ohne Fehler;
+    der erzeugte AppImage/`.deb` startet wenigstens als
+    Smoke-Test (Prozess startet, Fenster oeffnet sich, Prozess
+    beendet sich sauber).
+  - Optional (manuell, lokal mit Display-Server): `pnpm tauri dev`
+    zeigt das Fenster mit Hello-Seite und sichtbarem Tastaturfokus.
+    Dieser Schritt ist kein Pflicht-Verifikationsbaustein, weil er
+    in headless Umgebungen (CI, Container) nicht reproduzierbar
+    ist.
 
 ### Welle 3 — Makefile mit allen Pflichttargets
 
@@ -139,32 +148,73 @@ abgehakt ist.
     (`tests/arch-fixtures/`) — sollen vom Script rot gemeldet werden;
     Default-Lauf laeuft ohne sie.
   - `cargo llvm-cov` als Dev-Dependency; `make coverage-rust` mit
-    `--fail-under-lines 80`.
+    `--fail-under-lines 80` gemaess Lastenheft `GG-NFA-COV-001`.
   - `vitest run --coverage` mit `coverage.thresholds.lines = 80`
     in `vitest.config.ts`.
   - `make coverage-critical` als Stub (zeigt im Skelett, dass das
     Target existiert, ohne kritische Module zu pruefen — diese
     kommen in M2).
+  - **Skelett-Coverage-Strategie** (siehe ADR 0004 §4-Punkt 2):
+    Die 80-%-Schwelle wird nicht abgesenkt; stattdessen wird das
+    Skelett so geformt, dass es sie erreicht:
+    - Rust: `greet`-Command aus Welle 1 erhaelt einen Unit-Test, der
+      die Funktion vollstaendig ausuebt. Reine Re-Export-Module
+      (`mod.rs` mit ausschliesslich `pub mod x;`-Zeilen, ohne eigene
+      Logik) werden in `.cargo/config.toml` bzw. `coverage.toml`
+      ueber ein Exclude-Pattern (`hexagon/**/mod.rs`) von der
+      Messung ausgenommen, bis sie eigene Logik tragen.
+    - Frontend: `+page.svelte` aus Welle 2 erhaelt einen
+      Komponententest via `@testing-library/svelte` (Render-Smoke,
+      Button-Click). Reine Layout-Komponenten ohne Logik werden in
+      `vitest.config.ts` per `coverage.exclude` ausgeschlossen,
+      analog Rust-Re-Exports.
+    - Begruendung der Excludes: Lastenheft `GG-NFA-COV-004` erlaubt
+      keine kuenstliche Coverage; Re-Export-/Layout-only-Module
+      enthalten keine pruefbare Logik und gehoeren explizit nicht in
+      die Coverage-Basis.
 - **Verifikation:** `make arch-check` gruen im Default; mit
-  `ARCH_CHECK_FIXTURES=on make arch-check` rot. `make
-  coverage-rust` gruen. `make coverage-frontend` gruen.
+  `ARCH_CHECK_FIXTURES=on make arch-check` rot. `make coverage-rust`
+  und `make coverage-frontend` gruen mit `--fail-under-lines 80` bzw.
+  `coverage.thresholds.lines = 80`. Coverage-Excludes sind im jeweils
+  zugehoerigen Konfig-File dokumentiert und im Coverage-Report als
+  „excluded files"-Sektion sichtbar.
 
 ### Welle 5 — Build-Container
 
 - **Lieferziel:** `Dockerfile` baut den vollstaendigen Build-
   Container; `make container-gates` laeuft darin `make gates`.
 - **Schritte:**
-  - `Dockerfile` Multi-Stage:
-    - Base mit Rust-Toolchain (`rust:1.X-bookworm` o. ae.), Node, pnpm.
-    - Stage `build-deps`: WebKitGTK, libsoup3, libappindicator,
-      libssl-dev (Tauri-Linux-Abhaengigkeiten).
-    - Stage `tools`: `cargo install cargo-llvm-cov cargo-audit
-      cargo-modules` plus pnpm-globals.
+  - `Dockerfile` Multi-Stage mit durchgehend gepinnten Versionen
+    (ohne `latest`-Tags, ohne unversionierte `cargo install`-Aufrufe):
+    - Base auf konkreter Rust-Toolchain-Version
+      (z. B. `rust:1.84-bookworm`); Node-Version per
+      `actions/setup-node`-Aequivalent in der Frontend-Stage
+      (z. B. `node:22.13-bookworm-slim`); pnpm via `corepack
+      enable pnpm@<version>` pinned.
+    - Stage `build-deps`: `apt-get install` mit
+      `--no-install-recommends` und expliziten Versionen
+      (`webkit2gtk-4.1=<version>`, `libsoup-3.0=<version>`,
+      `libappindicator3-1=<version>`, `libssl-dev=<version>`).
+      Versionen entstammen dem Debian-Bookworm-Snapshot, der ueber
+      `snapshot.debian.org` oder eine eingefrorene Mirror-URL
+      angesprochen wird.
+    - Stage `tools`: `cargo install --locked --version <X.Y.Z>
+      cargo-llvm-cov`, gleiches Muster fuer `cargo-audit` und
+      `cargo-modules`. Konkrete Versionen stehen in einer
+      `Dockerfile`-internen Variable oder in einer
+      `tools.versions`-Datei im Repo, damit Updates ueber eine Stelle
+      laufen.
     - Stage `gates`: Source kopieren, `make gates` ausfuehren.
-  - `make container-gates`: `docker build -t gridguide-gates .` plus
-    Lauf mit `-v "$PWD/.coverage:/work/.coverage"` zum Extrahieren
-    der Reports.
-  - Pinned Base-Image-Version (z. B. `rust:1.84-bookworm`).
+  - `make container-gates`: `docker build --pull -t gridguide-gates
+    --build-arg ...` plus Lauf mit `-v
+    "$PWD/.coverage:/work/.coverage"` zum Extrahieren der Reports.
+    `--pull` stellt sicher, dass die Base-Image-SHA mit dem Tag
+    uebereinstimmt.
+  - Reproduzierbarkeitsnachweis: ein dokumentierter Befehl
+    (`scripts/repro-check.sh` oder analog) baut den Container zweimal
+    nacheinander und diff't die resultierenden Image-Hashes minus
+    der bekannten nicht-deterministischen Anteile gemaess
+    `GG-NFA-INSTALL-001`.
 - **Verifikation:** `make container-gates` gruen; Coverage-Reports
   liegen nach dem Lauf in `.coverage/`. Reproduzierbarkeitstest:
   zwei aufeinanderfolgende Laeufe unterscheiden sich nur in
