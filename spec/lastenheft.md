@@ -45,6 +45,7 @@ Eine Anforderung gilt als erfuellt, wenn der zugeordnete Belegtyp vorliegt:
 | Code-Conventions (`CC-*`)           | Lint-/Format-/Architekturtest oder Review-Checkliste mit dokumentiertem Befehl           |
 | Coverage (`NFA-COV-*`)              | Coverage-Report im Repository plus reproduzierbares Build-Target                         |
 | Quality Gates (`NFA-QG-*`)          | dokumentiertes Gate-Skript (Build-Target oder CI-Job), das das Gate auswertet            |
+| CI/CD (`NFA-CICD-*`)                | im Repository vorhandener CI-Workflow plus dokumentiertes Release-/Matrix-Verfahren      |
 | Performance (`NFA-PERF-*`)          | reproduzierbares Messprotokoll oder Benchmark im Repository                              |
 | Sicherheits-/Datenschutz (`NFA-SEC`, `NFA-LOG`) | automatisierter Test oder dokumentiertes Reviewprotokoll                      |
 | Sonstige NFA (`NFA-*`)              | automatisierter Test oder reproduzierbarer manueller Test                                |
@@ -76,9 +77,9 @@ IDs folgen dem Muster `GG-<Bereich>-<NNN>` mit dreistelliger Nummer.
 Bereiche umfassen `LESE`, `ZB`, `PE`, `PUE`, `MOD`, `MVP`, `FA-CAT`,
 `FA-PROJ`, `FA-DOC`, `FA-VAL`, `FA-FILL`, `FA-EXPORT`, `FA-SRC`, `NONGOAL`,
 `ARCH`, `PRINC`, `CC`, `DATA`, `AI`, `NFA-SEC`, `NFA-USE`, `NFA-MAINT`,
-`NFA-TEST`, `NFA-COV`, `NFA-QG`, `NFA-PERF`, `NFA-INSTALL`, `NFA-LOG`,
-`NFA-BACKUP`, `NFA-I18N`, `NFA-A11Y`, `LIC`, `ACCEPT`, `RISK`, `ASSUMP`,
-`DEC`.
+`NFA-TEST`, `NFA-COV`, `NFA-QG`, `NFA-CICD`, `NFA-PERF`, `NFA-INSTALL`,
+`NFA-LOG`, `NFA-BACKUP`, `NFA-I18N`, `NFA-A11Y`, `LIC`, `ACCEPT`, `RISK`,
+`ASSUMP`, `DEC`.
 
 `DEC` bezeichnet getroffene MVP-Festlegungen, `ASSUMP` dokumentierte
 Annahmen. Ein Bereich `OPEN` fuer noch nicht entschiedene Punkte kann bei
@@ -182,12 +183,14 @@ Die primaere Betriebsumgebung muss sein:
 - Tauri als Desktop-Runtime.
 - lokale Dateiverarbeitung fuer PDF, XLSX und ZIP.
 
-Folgende Sekundaerumgebungen koennen spaeter ergaenzt werden (kein
-MVP-Abnahmegegenstand):
+Folgende Sekundaerumgebungen werden im CI-Matrix-Build mitgefuehrt
+(Best-Effort, kein MVP-Abnahmegegenstand; siehe GG-NFA-CICD-002):
 
 - macOS.
 - Windows.
-- optionaler Browser-Plugin- oder CLI-Betrieb.
+
+Optionaler Browser-Plugin- oder CLI-Betrieb kann spaeter ergaenzt
+werden und ist ebenfalls kein MVP-Abnahmegegenstand.
 
 ### GG-PE-004 - Offline-Faehigkeit
 
@@ -1619,6 +1622,82 @@ Severity, betroffene Komponente und ggf. dokumentierte Ausnahme.
 Kritische und hohe Befunde blockieren `make gates`. Ausnahmen sind
 mit Begruendung und Ablaufdatum im Repository hinterlegt.
 
+### GG-NFA-CICD-001 - Automatisierte Pipeline
+
+Prioritaet: MVP
+
+Das Projekt muss eine automatisierte CI-Pipeline bereitstellen, die
+bei jedem Push und Pull-Request laeuft.
+
+Die Pipeline muss mindestens ausfuehren:
+
+- `make gates` (siehe GG-NFA-INSTALL-005, GG-NFA-QG-001 bis
+  GG-NFA-QG-005),
+- den containerisierten Build aus GG-NFA-INSTALL-004,
+- Veroeffentlichung der Coverage- und Test-Reports als
+  CI-Artefakte.
+
+Akzeptanz: Ein dokumentierter CI-Workflow im Repository erzeugt fuer
+jeden Push einen `make gates`-Lauf mit gruenem oder rotem Status. Der
+gewaehlte CI-Anbieter ist im begleitenden ADR dokumentiert.
+
+### GG-NFA-CICD-002 - Plattform-Matrix
+
+Prioritaet: MVP fuer Linux; V1 fuer Windows und macOS.
+
+Die CI-Pipeline muss `make gates` und einen Bundle-Build fuer Linux
+ausfuehren. Sie soll dieselben Schritte fuer Windows und macOS als
+Best-Effort mitlaufen lassen.
+
+Best-Effort bedeutet hier:
+
+- Fehlschlag eines macOS- oder Windows-Build-Jobs blockiert den
+  Merge nur, wenn die Aenderung explizit eine plattformspezifische
+  Funktion betrifft.
+- Plattformspezifische Test-Skips sind erlaubt und werden im
+  CI-Workflow dokumentiert.
+
+Akzeptanz: Die CI-Workflow-Datei definiert eine Plattform-Matrix mit
+mindestens `linux`, `macos`, `windows`. Der Linux-Job ist
+Pflichtcheck; macOS- und Windows-Jobs sind als Best-Effort
+markiert. Quelle des Bundle-Builds ist die Tauri-Toolchain auf der
+jeweils nativen Plattform.
+
+### GG-NFA-CICD-003 - Release-Workflow
+
+Prioritaet: V1
+
+Das Projekt soll einen Release-Workflow bereitstellen, der bei einem
+versionierten Tag (z. B. `v0.1.0`) signierte Bundles fuer alle
+unterstuetzten Plattformen erzeugt und als Release-Artefakt
+veroeffentlicht.
+
+Akzeptanz: Ein Tag-Push erzeugt einen Release-Entwurf mit Bundles
+gemaess GG-NFA-INSTALL-002. Der Workflow ist im Repository
+dokumentiert und nutzt nur Secrets, die in GG-NFA-CICD-004
+geregelten Schutz erfuellen.
+
+### GG-NFA-CICD-004 - Secret-Handling
+
+Prioritaet: MVP fuer Build, V1 fuer Signing.
+
+CI-Secrets (Signaturschluessel, optionale Tokens, API-Zugaenge)
+duerfen nicht im Repository, in Logs oder in Artefakten erscheinen.
+
+Mindestanforderungen:
+
+- Secrets werden ausschliesslich ueber den Secret-Store des
+  CI-Anbieters verwaltet.
+- Workflow-Logs maskieren Secret-Werte und werden vor
+  Veroeffentlichung auf Klartext-Lecks geprueft.
+- Pull-Requests aus Forks haben keinen Zugriff auf Signing-Secrets;
+  Workflows fuer Forks laufen ohne Secrets durch.
+
+Akzeptanz: Der CI-Workflow weist die Secret-Quelle (Variablenname
+und Speicherort) je Job aus. Ein Demo-Run mit einem absichtlich
+durchgereichten Test-Secret zeigt im Log nur den Maskierungs-Token
+und nicht den Klartext.
+
 ---
 
 ## 11. Lizenz und Veroeffentlichung
@@ -1827,11 +1906,12 @@ Anforderung muss bei ihrer Aufnahme einer Themenzeile zugeordnet werden.
 | Lizenz-/Nachnutzungsstatus  | GG-FA-CAT-007, GG-NONGOAL-004, GG-LIC-001, GG-LIC-002, GG-RISK-003       |
 | Lokale Verarbeitung         | GG-NFA-SEC-001, GG-NFA-SEC-002, GG-NFA-LOG-001, GG-NFA-LOG-002           |
 | Performance und Betrieb     | GG-NFA-PERF-001, GG-NFA-PERF-002, GG-NFA-INSTALL-001 bis GG-NFA-INSTALL-005 |
-| Build- und Test-Tooling     | GG-NFA-INSTALL-004, GG-NFA-INSTALL-005                                   |
+| Build- und Test-Tooling     | GG-NFA-INSTALL-004, GG-NFA-INSTALL-005 (ADR 0004)                        |
 | Erweiterbarkeit und Tests   | GG-NFA-MAINT-001, GG-NFA-TEST-001                                        |
 | SOLID und Code-Conventions  | GG-PRINC-001 bis GG-PRINC-006, GG-CC-001 bis GG-CC-008                   |
-| Testabdeckung               | GG-NFA-COV-001 bis GG-NFA-COV-004                                        |
-| Quality Gates               | GG-NFA-QG-001 bis GG-NFA-QG-005                                          |
+| Testabdeckung               | GG-NFA-COV-001 bis GG-NFA-COV-004 (ADR 0004)                             |
+| Quality Gates               | GG-NFA-QG-001 bis GG-NFA-QG-005 (ADR 0004)                               |
+| CI/CD und Release           | GG-NFA-CICD-001 bis GG-NFA-CICD-004 (ADR 0005), GG-PE-003                |
 | Sprache und Barrierefreiheit| GG-NFA-I18N-001, GG-NFA-A11Y-001                                         |
 | Quellenstatus               | GG-FA-SRC-001, GG-DATA-005, GG-RISK-001                                  |
 | Vokabulare und Datenmodell  | GG-DATA-001 bis GG-DATA-005                                              |
