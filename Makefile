@@ -203,15 +203,12 @@ dep-audit-frontend: install-frontend
 
 .PHONY: container-gates
 container-gates: ## make gates im pinned Build-Container ausfuehren
-	@if [ -f $(CURDIR)/Dockerfile ]; then \
-		$(DOCKER) build --pull -t $(CONTAINER_IMAGE) $(CURDIR) && \
-		mkdir -p $(COVERAGE_DIR) && \
-		$(DOCKER) run --rm \
-			-v "$(COVERAGE_DIR):/work/.coverage" \
-			$(CONTAINER_IMAGE) make gates; \
-	else \
-		echo "M1-W3-Stub: Dockerfile entsteht in M1-Welle 5."; \
-	fi
+	$(DOCKER) build --pull -t $(CONTAINER_IMAGE) $(CURDIR)
+	@mkdir -p $(COVERAGE_DIR)
+	$(DOCKER) run --rm \
+		--user "$(shell id -u):$(shell id -g)" \
+		-v "$(COVERAGE_DIR):/work/.coverage" \
+		$(CONTAINER_IMAGE) make gates
 
 # ============================================================
 # Pflege
