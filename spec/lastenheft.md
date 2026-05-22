@@ -6,7 +6,7 @@
 | Kurzbeschreibung | Desktop-Assistent zur Vorbereitung vollstaendiger Netz- und Behoerdenantraege |
 | Zielplattform    | Tauri Desktop-App, lokale Dokumentverarbeitung                                |
 | Hauptnutzer      | Installateure, Antragsteller, Projektentwickler                               |
-| Version          | 0.3.0                                                                         |
+| Version          | 0.3.1                                                                         |
 | Status           | Entwurf                                                                       |
 | Datum            | 2026-05-22                                                                    |
 
@@ -22,6 +22,9 @@ In diesem Dokument haben Modalverben folgende Bedeutung:
 - **darf nicht** - ausdruecklich ausgeschlossen.
 - **soll** - geplante Eigenschaft; Abweichungen muessen begruendet werden.
 - **kann** - optionale Eigenschaft ohne Abnahmeverpflichtung.
+
+Pluralformen (`muessen`, `sollen`, `koennen`, `duerfen nicht`) tragen
+dieselbe Bedeutung wie ihre Singularform.
 
 MVP-blockierend sind Anforderungen, die mit Prioritaet `MVP` gekennzeichnet sind
 oder im Kapitel "MVP-Umfang" explizit genannt werden.
@@ -82,7 +85,10 @@ Sprachkonvention, um Code-Identifier und UI-Bezeichner sauber zu trennen:
 
 - **Fachliche Vokabulare** (sichtbar in UI, Profilen, Exporten) verwenden
   deutsche PascalCase-Bezeichner. Beispiele: `Profiltyp`, `Anlagenart`,
-  `Dokumenttyp`, `Falltyp`, `Katalogstatus` (siehe GG-DATA-004).
+  `Dokumenttyp`, `Falltyp`, `Katalogstatus` (siehe GG-DATA-004). Bei
+  strukturierten Werten (z. B. `Falltyp`) sind Unterstriche als Segmenttrenner
+  und etablierte technische Akronyme (z. B. `PV`, `NS` fuer Niederspannung,
+  `kW`) zulaessig.
 - **Technische Lifecycle-Felder** (intern, nicht UI-relevant) verwenden
   englische snake_case-Bezeichner. Beispiele: `extraction_method`, `status`
   (siehe GG-DATA-002).
@@ -364,7 +370,8 @@ Ein Profil muss mindestens enthalten:
 - Portalhinweise (Freitext, kann leer sein, falls keine Portalpflicht
   besteht).
 - mindestens einen bekannten Falltyp aus dem Vokabular `Falltyp` (siehe
-  GG-DATA-004).
+  GG-DATA-004) fuer Profile mit Katalogstatus `SehrGutErschlossen` oder
+  `GutErschlossen`; fuer schwaecher erschlossene Profile optional.
 - Profilversion gemaess GG-DATA-005.
 - Quellkatalog aus dem Vokabular `Quellkatalog` (siehe GG-DATA-004).
 - Zugangsart aus dem Vokabular `Zugangsart` (siehe GG-DATA-004).
@@ -567,8 +574,8 @@ Prioritaet: MVP
 Das Produkt muss regelbasierte Plausibilitaetspruefungen unterstuetzen.
 
 MVP-Mindestmenge: Fuer den Demo-Falltyp `PV_NS_OhneSpeicher` (siehe
-GG-DEC-002) muessen mindestens **fuenf** Plausibilitaetsregeln aktiv sein,
-die mindestens die folgenden Themen abdecken:
+GG-DEC-002) muss mindestens **je eine Regel pro nachfolgendem Thema** aktiv
+sein (insgesamt mindestens **fuenf Regeln**):
 
 - Anlagenleistung fehlt oder widerspricht Formularangaben.
 - Anlagenart und vorhandene Nachweise sind inkonsistent (z. B. Anlagenart
@@ -605,7 +612,8 @@ Das Paket muss mindestens enthalten:
 - referenzierte nutzereigene Dokumente.
 - Links auf offizielle Quellen anstelle kopierter Originalformulare ohne
   offene Lizenz (siehe GG-FA-CAT-007 und GG-NONGOAL-004).
-- Quellen- und Profilversion gemaess GG-DATA-005.
+- Profilversion gemaess GG-DATA-005 (enthaelt `source_url` und
+  `retrieved_at` und ist damit zugleich Quellennachweis).
 
 Das Paket darf keine Inhalte gemaess GG-DATA-003 enthalten.
 
@@ -737,7 +745,8 @@ Der fachliche Kern soll mindestens folgende Bounded Contexts unterscheiden:
 - `Submission`.
 
 Spaetere Contexts koennen `OcrExtraction`, `Mastr`, `Redispatch` und
-`PortalAutomation` sein.
+`PortalAutomation` sein. `PortalAutomation` ist erst nach dem MVP relevant
+(siehe GG-MVP-008).
 
 ### GG-ARCH-008 - Technologie-Stack
 
@@ -785,6 +794,9 @@ Mindestens erforderlich sind:
 - `evidence`.
 - `submission_package`.
 
+Diese Feldnamen sind technische Identifier gemaess GG-LESE-006; zugehoerige
+UI-Bezeichner werden separat in deutscher Sprache gefuehrt.
+
 ### GG-DATA-002 - Herkunft und Konfidenz
 
 Prioritaet: MVP
@@ -804,6 +816,8 @@ Pflichtfelder pro Wert:
 
 Akzeptanz: Werte mit `status = confirmed` haben `confirmed_by_user = true`.
 Werte mit `extraction_method = manual` muessen `confidence = null` setzen.
+Bei anderen Extraktionsmethoden ohne ermittelbare Konfidenz wird ebenfalls
+`confidence = null` gesetzt.
 
 ### GG-DATA-003 - Secrets ausserhalb von Projektdaten
 
@@ -952,6 +966,9 @@ ist mindestens eines der folgenden Formate zulaessig:
 - Markdown mit festen Abschnitten fuer fehlende Felder, fehlende Unterlagen,
   Plausibilitaetswarnungen, vorgeschlagene Werte und Rueckfragen.
 
+Die Promptschluessel und Antwortformat-Bezeichner sind technische
+Schnittstellenidentifier gemaess GG-LESE-006.
+
 Akzeptanz:
 
 - Der Nutzer kann einen Prompt aus den aktuellen Projektdaten erzeugen und
@@ -1050,7 +1067,9 @@ Akzeptanz: UI und Exportpaket gruppieren Warnungen nach Schweregrad. Solange
 mindestens ein Punkt mit Schweregrad `fehler` offen ist, ist der Export
 standardmaessig gesperrt. Der Nutzer kann den Export ueber eine explizite,
 protokollierte Override-Bestaetigung dennoch erzeugen; das Exportpaket
-markiert in diesem Fall alle Override-Fehler sichtbar.
+markiert in diesem Fall alle Override-Fehler sichtbar. Override-Bestaetigungen
+werden im lokalen Anwendungsprotokoll gemaess GG-NFA-LOG-001 sowie im
+Exportpaket-Manifest dokumentiert (Zeitpunkt, betroffene Warnungs-IDs).
 
 ### GG-NFA-MAINT-001 - Erweiterbarkeit
 
@@ -1095,15 +1114,12 @@ Das Produkt muss PDF-Dateien bis **50 MB** und XLSX-Dateien bis **20 MB**
 verarbeiten koennen. Groessere Dateien duerfen abgelehnt werden, muessen aber
 mit einer verstaendlichen Fehlermeldung gemaess GG-NFA-USE-001 reagieren.
 
-### GG-NFA-INSTALL-001 - Distribution
+### GG-NFA-INSTALL-001 - Reproduzierbarer Build
 
-Prioritaet: V1
+Prioritaet: MVP
 
-Das Produkt soll als signiertes Tauri-Bundle fuer Linux (AppImage und .deb)
-verteilt werden. MVP-Builds duerfen unsigniert sein, muessen aber
-reproduzierbar sein.
-
-Reproduzierbarkeit bedeutet in diesem Lastenheft:
+MVP-Builds muessen reproduzierbar sein. Reproduzierbarkeit bedeutet in diesem
+Lastenheft:
 
 - Rust-Abhaengigkeiten werden ueber `Cargo.lock` und `cargo build --locked`
   fixiert.
@@ -1119,7 +1135,17 @@ Geheimnisse; zwei aufeinanderfolgende Builds auf demselben Referenzsystem
 unterscheiden sich nur in den dokumentierten nicht-deterministischen
 Anteilen.
 
-### GG-NFA-INSTALL-002 - Updates
+### GG-NFA-INSTALL-002 - Signierte Distribution
+
+Prioritaet: V1
+
+Das Produkt soll als signiertes Tauri-Bundle fuer Linux (AppImage und .deb)
+verteilt werden. MVP-Builds duerfen unsigniert sein.
+
+Akzeptanz: V1-Builds werden signiert ausgeliefert; ein Signaturnachweis
+liegt dem Release-Artefakt bei.
+
+### GG-NFA-INSTALL-003 - Updates
 
 Prioritaet: V1
 
@@ -1201,7 +1227,7 @@ liegt im Repository und wird mit jeder MVP-Abnahme erneuert.
 Prioritaet: MVP
 
 GridGuide muss unter einer OSI-anerkannten Open-Source-Lizenz veroeffentlicht
-werden. Bevorzugte Lizenz ist **Apache-2.0** (siehe GG-DEC-005).
+werden. Gewaehlte Lizenz ist **MIT** (siehe GG-DEC-005).
 
 Akzeptanz: Eine `LICENSE`-Datei mit dem gewaehlten Lizenztext liegt im
 Repository.
@@ -1374,7 +1400,7 @@ GG-ARCH-008).
 
 Status: entschieden
 
-GridGuide wird unter Apache-2.0 veroeffentlicht (siehe GG-LIC-001).
+GridGuide wird unter der MIT-Lizenz veroeffentlicht (siehe GG-LIC-001).
 
 ---
 
@@ -1394,7 +1420,7 @@ GridGuide wird unter Apache-2.0 veroeffentlicht (siehe GG-LIC-001).
 | Portal-only-Abgrenzung      | GG-MVP-008, GG-FA-CAT-006, GG-NONGOAL-002, GG-RISK-002                   |
 | Lizenz-/Nachnutzungsstatus  | GG-FA-CAT-007, GG-NONGOAL-004, GG-LIC-001, GG-LIC-002, GG-RISK-003       |
 | Lokale Verarbeitung         | GG-NFA-SEC-001, GG-NFA-SEC-002, GG-NFA-LOG-002                           |
-| Performance und Betrieb     | GG-NFA-PERF-001, GG-NFA-PERF-002, GG-NFA-INSTALL-001, GG-NFA-INSTALL-002 |
+| Performance und Betrieb     | GG-NFA-PERF-001, GG-NFA-PERF-002, GG-NFA-INSTALL-001 bis GG-NFA-INSTALL-003 |
 | MVP-Entscheidungen          | GG-DEC-001 bis GG-DEC-005                                                |
 | Annahmen                    | GG-ASSUMP-001 bis GG-ASSUMP-005                                          |
 
