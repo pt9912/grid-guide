@@ -1,0 +1,18 @@
+[workspace]
+resolver = "2"
+
+[package]
+name = "gridguide"
+version = "0.0.0"
+edition = "2021"
+rust-version = "1.84"
+license = "MIT"
+publish = false
+description = "Lokaler Tauri-Desktop-Assistent fuer Netz- und Behoerdenantraege (siehe spec/lastenheft.md)"
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
