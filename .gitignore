@@ -1,0 +1,63 @@
+# --- Rust / Cargo ---
+target/
+**/*.rs.bk
+*.pdb
+
+# --- Node / pnpm / npm ---
+node_modules/
+.pnpm-store/
+.npm/
+.pnp.*
+.yarn/
+
+# --- SvelteKit / Vite ---
+.svelte-kit/
+.vite/
+dist/
+build/
+
+# --- Tauri ---
+src-tauri/target/
+src-tauri/gen/schemas/
+src-tauri/WixTools/
+
+# --- Coverage / Test-Reports ---
+.coverage/
+coverage/
+*.lcov
+*.profraw
+*.profdata
+lcov.info
+
+# --- Logs ---
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- OS-Artefakte ---
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# --- IDE / Editor ---
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.history/
+
+# --- Secrets und lokale Overrides ---
+.env
+.env.local
+.env.*.local
+.envrc
+secrets/
+
+# --- Build-Artefakte und temporaere Ordner ---
+*.tmp
+*.bak
+tmp/
+.tmp/

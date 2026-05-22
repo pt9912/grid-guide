@@ -1,9 +1,9 @@
 # M1-Slice-Plan — Foundation, Build-Tooling und CI
 
-**Status:** Skizziert (noch nicht aktiv; wandert nach `in-progress/`
-bei M1-Start).
+**Status:** In Progress (aktiviert 2026-05-22; Welle 0 laeuft).
 **Eroeffnet:** 2026-05-22
-**Bezug:** [Roadmap M1](../in-progress/roadmap.md#m1--foundation-build-tooling-und-ci);
+**Aktiviert:** 2026-05-22
+**Bezug:** [Roadmap M1](roadmap.md#m1--foundation-build-tooling-und-ci);
 [ADR 0001](../../adr/0001-documentation-and-planning-structure.md);
 [ADR 0002](../../adr/0002-frontend-stack-sveltekit.md);
 [ADR 0003](../../adr/0003-desktop-runtime-tauri.md);

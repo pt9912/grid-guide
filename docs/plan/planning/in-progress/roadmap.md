@@ -1,7 +1,7 @@
 # Roadmap — grid-guide
 
-**Status:** Aktiv — Spezifikationsphase abgeschlossen, M1 wartet auf
-Aktivierung.
+**Status:** Aktiv — Spezifikationsphase abgeschlossen, **M1 aktiv**
+(Welle 0 laeuft).
 **Stand:** 2026-05-22 (Lastenheft v0.4.0; ADRs 0001/0002/0003
 `Accepted`; ADRs 0004/0005 `Provisional` mit Spike-Vertrag, der mit
 M1 geschlossen wird).
@@ -51,6 +51,9 @@ Code-Skelett `GG-AR-*`-Kennungen einfordert (siehe Trigger 001).
 
 ### M1 — Foundation, Build-Tooling und CI
 
+**Slice-Plan:** [`in-progress/M1-Slice-Plan.md`](M1-Slice-Plan.md)
+(aktiviert 2026-05-22; Welle 0 laeuft).
+
 - **Lieferziel:** lokales Repo-Skelett, mit dem `make gates` lokal
   und in CI gruen laeuft.
   - `src-tauri/` mit minimaler `main.rs` (kein fachlicher Code).
@@ -93,7 +96,7 @@ Code-Skelett `GG-AR-*`-Kennungen einfordert (siehe Trigger 001).
         `GG-AR-PORT-*` und `GG-AR-TABU-*`-Stubs.
   - [ ] ADR 0004 und ADR 0005 auf `Accepted` gehoben; Schaerfungs-
         Spalte in `docs/plan/adr/README.md` aktualisiert.
-- **Status:** `Pending`.
+- **Status:** `In Progress` (seit 2026-05-22; Welle 0 laeuft).
 
 ### M2 — Domain-Kern und Katalog-Seed
 
