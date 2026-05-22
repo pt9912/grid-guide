@@ -203,6 +203,18 @@ dep-audit-frontend: install-frontend
 
 DIST_DIR := $(CURDIR)/dist
 
+.PHONY: lock-refresh
+lock-refresh: ## frontend/pnpm-lock.yaml im Container generieren (kein Host-pnpm/node noetig)
+	$(DOCKER) build --pull --target lock-refresh-tool \
+		-t $(CONTAINER_IMAGE):lock-refresh-tool $(CURDIR)
+	$(DOCKER) run --rm \
+		--user "$(shell id -u):$(shell id -g)" \
+		-e XDG_CACHE_HOME=/tmp/.cache \
+		-v "$(FRONTEND_DIR):/workspace" \
+		-w /workspace \
+		$(CONTAINER_IMAGE):lock-refresh-tool \
+		pnpm install --lockfile-only --ignore-scripts
+
 .PHONY: container-gates
 container-gates: ## make gates im pinned Build-Container ausfuehren
 	$(DOCKER) build --pull -t $(CONTAINER_IMAGE) $(CURDIR)

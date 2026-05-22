@@ -6,18 +6,26 @@
 # und docs/plan/adr/0004 §2.6.
 #
 # Multi-Stage-Layout:
-#   - system-deps : Base = node:24.16-bookworm-slim
-#                   (bringt Node + Corepack + npm/npx intakt).
-#                   Rust-Toolchain wird via rustup-init nachinstalliert
-#                   (Rust und Node von oben mischen umgekehrt brach
-#                   Corepacks Symlink-Layout — `Cannot find module
-#                   './lib/corepack.cjs'`). apt-Pakete fuer Tauri-2.x
-#                   Linux-Build.
-#   - tools       : alle cargo-Tools (cargo-llvm-cov, cargo-audit,
-#                   cargo-modules, tauri-cli), je Tool eigener RUN
-#                   fuer sauberen Layer-Cache.
-#   - gates       : Sourcen + Cargo-Fetch + Frontend-Install;
-#                   CMD ist `make gates`.
+#   - pnpm-base        : Base = node:24.16-bookworm-slim mit pnpm via
+#                        Corepack. Minimaler Boden fuer
+#                        lockfile-only-Operationen (Pattern aus
+#                        ../m-trace/Dockerfile).
+#   - lock-refresh-tool: pnpm-base, dediziert fuer
+#                        `pnpm install --lockfile-only` per
+#                        `make lock-refresh`. Schreibt das Lockfile
+#                        ueber Volume-Mount in den Host-Workspace,
+#                        ohne dass Host-Node oder -node_modules
+#                        existieren muessen.
+#   - system-deps      : pnpm-base + apt-Pakete + Rust-Toolchain via
+#                        rustup. Rust und Node mischen umgekehrt brach
+#                        Corepacks Symlink-Layout (`Cannot find
+#                        module './lib/corepack.cjs'`), daher Node als
+#                        Basis.
+#   - tools            : system-deps + cargo-Tools (cargo-llvm-cov,
+#                        cargo-audit, cargo-modules, tauri-cli), je
+#                        Tool eigener RUN fuer Layer-Cache.
+#   - gates            : tools + Sourcen + Cargo-Fetch + Frontend-
+#                        Install; CMD `make gates`.
 #
 # Reproduzierbarkeit: alle Versionen sind ueber ARG gepinnt; bei
 # Aenderung muss die Slice-Closure-Notiz in done/ aktualisiert
@@ -38,12 +46,39 @@ ARG CARGO_MODULES_VERSION=0.17.0
 ARG TAURI_CLI_VERSION=2.11.2
 
 # ============================================================
-# Stage 1: System-Dependencies (Node + Rust + apt + pnpm)
+# Stage 1a: pnpm-base — Node + Corepack + pnpm, sonst nichts.
+#
+# Minimaler Boden fuer pnpm-only-Aufgaben (z. B. Lockfile-Refresh).
+# Wird von system-deps und lock-refresh-tool gleichermassen
+# verwendet, damit der pnpm-Stack genau einmal definiert ist.
 # ============================================================
-FROM node:${NODE_VERSION}-bookworm-slim AS system-deps
+FROM node:${NODE_VERSION}-bookworm-slim AS pnpm-base
+
+ARG PNPM_VERSION
+
+RUN corepack enable \
+    && corepack prepare "pnpm@${PNPM_VERSION}" --activate \
+    && pnpm --version
+
+# ============================================================
+# Stage 1b: lock-refresh-tool — minimal pnpm-only-Image.
+#
+# Genutzt von `make lock-refresh`: mountet den Host-Workspace und
+# laesst pnpm `--lockfile-only` darin laufen. XDG_CACHE_HOME zeigt
+# auf /tmp, damit pnpm keinen Schreibversuch in ~/.cache des
+# (gemounteten) Host-Users macht.
+# ============================================================
+FROM pnpm-base AS lock-refresh-tool
+
+ENV XDG_CACHE_HOME=/tmp/.cache
+WORKDIR /workspace
+
+# ============================================================
+# Stage 1c: System-Dependencies (pnpm-base + Rust + apt)
+# ============================================================
+FROM pnpm-base AS system-deps
 
 ARG RUST_VERSION
-ARG PNPM_VERSION
 
 # Tauri-2.x-Linux-Build-Abhaengigkeiten + Rust-Compile-Tooling.
 # libsoup-3.0-dev ist transitiv via webkit2gtk-4.1, wird aber
@@ -80,12 +115,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -o /tmp/rustup-ini
     && rustc --version \
     && cargo --version
 
-# pnpm via Corepack, pinned auf die in frontend/package.json
-# deklarierte `packageManager`-Version. Corepack ist im node-Image
-# vorinstalliert.
-RUN corepack enable \
-    && corepack prepare "pnpm@${PNPM_VERSION}" --activate \
-    && pnpm --version
+# pnpm bringt pnpm-base mit; hier nichts mehr noetig.
 
 # ============================================================
 # Stage 2: Cargo-Tools
