@@ -372,6 +372,21 @@ abgehakt ist.
         peerDependencies` zeigen Kompatibilitaet mit ESLint 10.4.0.
         Bei Bruch: `pnpm.overrides` oder Downgrade auf ESLint 9.x;
         Beschluss als ADR-0004-Schaerfung dokumentieren.
+  - [x] **`make container-ci`-Target** (Review-Finding H1 aus
+        M1-W5): zusaetzlich zu `container-gates` erfuellt es die
+        woertliche `GG-NFA-INSTALL-004`-Akzeptanz (`make ci` im
+        Container) und extrahiert das Bundle via Volume-Mount
+        nach `$(CURDIR)/dist/`.
+  - [ ] **Bundle-Reproduzierbarkeit pro `GG-NFA-INSTALL-001`**
+        (Review-Finding H2 aus M1-W5): aktueller Skript-Stand
+        prueft nur das Rust-Binary. Volle Bundle-Repro (AppImage +
+        `.deb`) wandert nach Trigger 011 und wird mit
+        V1-Release-Vorbereitung adressiert.
+  - [ ] **apt-Snapshot-Pinning** (Review-Finding M9 aus M1-W5):
+        verbleibende nicht-deterministische Quelle in der
+        Build-Toolchain. Trigger 010 dokumentiert die offene
+        Entscheidung; aktiviert bei erstem nachweisbaren
+        apt-Drift im Repro-Check.
 
 ### Welle 6 — GitHub-Actions-CI-Matrix
 

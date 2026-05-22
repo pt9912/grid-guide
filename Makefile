@@ -201,6 +201,8 @@ dep-audit-frontend: install-frontend
 # Container-Variante (GG-NFA-INSTALL-004)
 # ============================================================
 
+DIST_DIR := $(CURDIR)/dist
+
 .PHONY: container-gates
 container-gates: ## make gates im pinned Build-Container ausfuehren
 	$(DOCKER) build --pull -t $(CONTAINER_IMAGE) $(CURDIR)
@@ -210,15 +212,29 @@ container-gates: ## make gates im pinned Build-Container ausfuehren
 		-v "$(COVERAGE_DIR):/work/.coverage" \
 		$(CONTAINER_IMAGE) make gates
 
+.PHONY: container-ci
+container-ci: ## make ci im pinned Build-Container ausfuehren (Bundle wird extrahiert)
+	$(DOCKER) build --pull -t $(CONTAINER_IMAGE) $(CURDIR)
+	@mkdir -p $(COVERAGE_DIR) $(DIST_DIR)
+	$(DOCKER) run --rm \
+		--user "$(shell id -u):$(shell id -g)" \
+		-v "$(COVERAGE_DIR):/work/.coverage" \
+		-v "$(DIST_DIR):/work/dist" \
+		$(CONTAINER_IMAGE) sh -c 'make ci && \
+			mkdir -p /work/dist && \
+			cp -r /work/src-tauri/target/release/bundle/* /work/dist/ 2>/dev/null || \
+			echo "[container-ci] kein Bundle zum Extrahieren (tauri.conf.json bundle.active=false?)"'
+
 # ============================================================
 # Pflege
 # ============================================================
 
 .PHONY: clean
-clean: ## Build-Artefakte loeschen (target/, build/, .svelte-kit/, coverage/, install-stamp)
+clean: ## Build-Artefakte loeschen (target/, build/, .svelte-kit/, coverage/, dist/, install-stamp)
 	rm -rf $(TAURI_DIR)/target \
 		$(FRONTEND_DIR)/build \
 		$(FRONTEND_DIR)/.svelte-kit \
 		$(FRONTEND_DIR)/coverage \
 		$(FRONTEND_INSTALL_STAMP) \
-		$(COVERAGE_DIR)
+		$(COVERAGE_DIR) \
+		$(DIST_DIR)
