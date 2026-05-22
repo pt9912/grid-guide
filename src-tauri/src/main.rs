@@ -2,19 +2,25 @@
 // Siehe spec/lastenheft.md (GG-MVP-001, GG-ARCH-001..008) und
 // docs/plan/adr/0003-desktop-runtime-tauri.md.
 //
-// M1-Welle-1-Skelett: nur Hexagon-Layout-Stubs plus eine triviale
-// greet-Funktion. Tauri-Runtime-Integration (Commands, Webview)
-// folgt in M1-Welle 2.
+// M1-Welle-2-Stand: Tauri-Builder verdrahtet, greet als
+// #[tauri::command] registriert. Hexagonale Adapter und Use-Cases
+// folgen in M2..M7.
+
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod adapters;
 mod hexagon;
 
+#[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {name}, from GridGuide!")
 }
 
 fn main() {
-    println!("{}", greet("World"));
+    tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![greet])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
 }
 
 #[cfg(test)]
