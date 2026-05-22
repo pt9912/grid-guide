@@ -99,8 +99,12 @@ abgehakt ist.
 - **Verifikation:** `cargo build --locked` gruen; `cargo test`
   gruen (auch ohne Tests).
 - **DoD:**
-  - [x] `rust-toolchain.toml` pinned Rust 1.84 + clippy + rustfmt.
-  - [x] `src-tauri/Cargo.toml` als Workspace + Package, MSRV 1.84,
+  - [x] `rust-toolchain.toml` pinned Rust 1.87.0 + clippy + rustfmt
+        (initial 1.84, mit erstem Container-Lauf auf 1.87 angehoben,
+        weil tauri-2.11-Ecosystem-Crates wie `serde_spanned 1.1.1`
+        `edition2024` (Rust ≥ 1.85) und `wasip2`/`wit-bindgen`
+        Rust ≥ 1.87 verlangen).
+  - [x] `src-tauri/Cargo.toml` als Workspace + Package, MSRV 1.87,
         Lints konservativ (`unsafe_code = forbid`,
         `clippy::pedantic = warn`).
   - [x] `src-tauri/src/main.rs` mit `greet` und 2 Unit-Tests
@@ -310,7 +314,7 @@ abgehakt ist.
   - `Dockerfile` Multi-Stage mit durchgehend gepinnten Versionen
     (ohne `latest`-Tags, ohne unversionierte `cargo install`-Aufrufe):
     - Base auf konkreter Rust-Toolchain-Version
-      (z. B. `rust:1.84-bookworm`); Node-Version per
+      (z. B. `rust:1.87-bookworm`); Node-Version per
       `actions/setup-node`-Aequivalent in der Frontend-Stage
       (z. B. `node:22.13-bookworm-slim`); pnpm via `corepack
       enable pnpm@<version>` pinned.

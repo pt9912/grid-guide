@@ -29,7 +29,7 @@
 # in frontend/package.json gepflegt werden. Beim Bump beide Stellen
 # updaten.
 
-ARG RUST_VERSION=1.84.0
+ARG RUST_VERSION=1.87.0
 ARG NODE_VERSION=22.13
 ARG PNPM_VERSION=9.15.0
 ARG CARGO_LLVM_COV_VERSION=0.6.16
