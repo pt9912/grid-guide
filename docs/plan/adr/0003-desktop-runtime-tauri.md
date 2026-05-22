@@ -2,11 +2,17 @@
 
 **Status:** Accepted
 **Datum:** 2026-05-22
+**Letzte inhaltliche Aenderung:** 2026-05-22 — SOLID-Bezug ergaenzt;
+parallel zur Aufnahme von `GG-PRINC-*` und `GG-CC-*` in Lastenheft
+v0.4.0 (kein Wechsel der Entscheidung, nur Verbindungspunkte zu den
+neuen Anforderungen sichtbar gemacht).
 **Bezug:** [ADR 0001](0001-documentation-and-planning-structure.md),
 [ADR 0002](0002-frontend-stack-sveltekit.md),
 [Lastenheft](../../../spec/lastenheft.md) (`GG-MVP-001`, `GG-ARCH-001`,
-`GG-ARCH-008`, `GG-PE-003`, `GG-NFA-INSTALL-001`, `GG-DATA-003`,
-`GG-NFA-PERF-001`)
+`GG-ARCH-002` bis `GG-ARCH-006`, `GG-ARCH-008`, `GG-PE-003`,
+`GG-NFA-INSTALL-001`, `GG-DATA-003`, `GG-NFA-PERF-001`,
+`GG-PRINC-002`, `GG-PRINC-003`, `GG-PRINC-006`, `GG-CC-002`,
+`GG-CC-003`)
 **Aenderungstyp:** Greenfield-ADR. Schliesst die Mindestversion-Festlegung
 fuer Tauri, die in Lastenheft v0.3.1 noch inline in `GG-ARCH-008`
 stand und mit v0.3.2 bewusst in einen ADR ausgelagert wurde.
@@ -81,6 +87,20 @@ Risiken:
   einzelne Nutzer treffen. Dokumentierte Workarounds werden in der
   Benutzerdokumentation gepflegt; sie blockieren die MVP-Abnahme
   nicht.
+
+Bezug zu SOLID (siehe `GG-PRINC-001..006`):
+
+- **SRP (`GG-PRINC-002`)**: Tauri-Commands sind als duenne
+  Driving-Adapter verortet (`GG-ARCH-004`); sie uebersetzen Aufrufe
+  vom Frontend in Use-Cases und enthalten keine Plausibilitaets- oder
+  Profillogik (`GG-CC-002`).
+- **OCP (`GG-PRINC-003`)**: Das Tauri-Plugin-System erlaubt es,
+  zusaetzliche driven Adapter (z. B. neuer OS-Secret-Store, weitere
+  Dateisystem-Backends) ohne Aenderung am Kern hinzuzufuegen.
+- **DIP (`GG-PRINC-006`)**: Der Rust-Backend-Teil arbeitet ueber
+  Trait-basierte Ports (`hexagon/ports/driven`); konkrete
+  Tauri-/Webview-/Plugin-APIs sind Adapter-Detail und treten im Kern
+  nicht auf (`GG-ARCH-003`, `GG-CC-003`).
 
 ---
 

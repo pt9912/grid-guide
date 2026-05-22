@@ -2,9 +2,15 @@
 
 **Status:** Accepted
 **Datum:** 2026-05-22
+**Letzte inhaltliche Aenderung:** 2026-05-22 — SOLID-Bezug ergaenzt;
+parallel zur Aufnahme von `GG-PRINC-*` und `GG-CC-*` in Lastenheft
+v0.4.0 (kein Wechsel der Entscheidung, nur Verbindungspunkte zu den
+neuen Anforderungen sichtbar gemacht).
 **Bezug:** [ADR 0001](0001-documentation-and-planning-structure.md),
 [Lastenheft](../../../spec/lastenheft.md) (`GG-ARCH-008`,
-`GG-DEC-004`, `GG-NFA-A11Y-001`, `GG-NFA-I18N-001`, `GG-NFA-MAINT-001`)
+`GG-DEC-004`, `GG-NFA-A11Y-001`, `GG-NFA-I18N-001`,
+`GG-NFA-MAINT-001`, `GG-PRINC-002`, `GG-PRINC-003`, `GG-PRINC-005`,
+`GG-CC-001`, `GG-CC-007`)
 **Aenderungstyp:** Greenfield-ADR. Schliesst die Mindestversion-Festlegung
 fuer SvelteKit, die in Lastenheft v0.3.1 noch inline in `GG-ARCH-008`
 stand und mit v0.3.2 bewusst in einen ADR ausgelagert wurde.
@@ -72,6 +78,25 @@ Risiken:
   Onboarding-Routen mit Praeloading), muss der Adapter ueberprueft
   werden; ein Wechsel auf einen anderen statischen Adapter ist
   moeglich, ohne den Stack zu verlassen.
+
+Bezug zu SOLID (siehe `GG-PRINC-001..006`):
+
+- **SRP (`GG-PRINC-002`)**: SvelteKit-Routen kapseln je einen
+  fachlichen Use-Case (Projektuebersicht, Profilauswahl, Review,
+  Export). Komponenten teilen Rendering und Interaktion entlang der
+  Routen, nicht entlang technischer Layer; ein Use-Case-Wechsel
+  beruehrt eine Route, nicht das gesamte UI.
+- **OCP (`GG-PRINC-003`)**: Neue Falltypen oder Profile fuegen
+  weitere Eintraege in den datengetriebenen Profilkatalog hinzu
+  (siehe `GG-NFA-MAINT-001`); die Routen-/Komponentenstruktur muss
+  dafuer nicht geaendert werden.
+- **ISP (`GG-PRINC-005`)**: SvelteKit-Stores werden je Bounded
+  Context (Catalog, Project, Validation, Submission, siehe
+  `GG-ARCH-007`) getrennt gehalten; eine Komponente abonniert nur die
+  Stores, die sie fachlich braucht.
+- **Kurze Funktionen / Immutable (`GG-CC-001`, `GG-CC-007`)**:
+  Svelte 5 `$state`/`$derived` und Stores erlauben kleinen,
+  fokussierten Komponentencode mit klar lokalisierter Mutation.
 
 ---
 
