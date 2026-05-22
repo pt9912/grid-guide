@@ -6,6 +6,7 @@ target/
 # --- Node / pnpm / npm ---
 node_modules/
 .pnpm-store/
+frontend/.pnpm-store/
 .npm/
 .pnp.*
 .yarn/

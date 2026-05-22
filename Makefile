@@ -210,10 +210,12 @@ lock-refresh: ## frontend/pnpm-lock.yaml im Container generieren (kein Host-pnpm
 	$(DOCKER) run --rm \
 		--user "$(shell id -u):$(shell id -g)" \
 		-e XDG_CACHE_HOME=/tmp/.cache \
+		-e XDG_DATA_HOME=/tmp/.data \
 		-v "$(FRONTEND_DIR):/workspace" \
 		-w /workspace \
 		$(CONTAINER_IMAGE):lock-refresh-tool \
-		pnpm install --lockfile-only --ignore-scripts
+		pnpm install --lockfile-only --ignore-scripts \
+			--store-dir /tmp/.pnpm-store
 
 .PHONY: container-gates
 container-gates: ## make gates im pinned Build-Container ausfuehren
