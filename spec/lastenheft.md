@@ -6,7 +6,7 @@
 | Kurzbeschreibung | Desktop-Assistent zur Vorbereitung vollstaendiger Netz- und Behoerdenantraege |
 | Zielplattform    | Tauri Desktop-App, lokale Dokumentverarbeitung                                |
 | Hauptnutzer      | Installateure, Antragsteller, Projektentwickler                               |
-| Version          | 0.3.2                                                                         |
+| Version          | 0.4.0                                                                         |
 | Status           | Entwurf                                                                       |
 | Datum            | 2026-05-22                                                                    |
 
@@ -41,6 +41,10 @@ Eine Anforderung gilt als erfuellt, wenn der zugeordnete Belegtyp vorliegt:
 | Datenanforderungen (`DATA-*`)       | automatisierter Test (z. B. Schema-/Parsertest) oder reproduzierbares Demo-Artefakt      |
 | KI-/Regelanforderungen (`AI-*`)     | reproduzierbares Demo-Artefakt (Prompt, Antwort) plus automatischer Test, wo moeglich    |
 | Architektur (`ARCH-*`)              | dokumentierter Architekturentscheid (ADR) plus statischer Import-/Strukturcheck          |
+| Prinzipien (`PRINC-*`)              | dokumentierter Architekturentscheid (ADR) plus, wo moeglich, statischer Check oder Lint-Regel |
+| Code-Conventions (`CC-*`)           | Lint-/Format-/Architekturtest oder Review-Checkliste mit dokumentiertem Befehl           |
+| Coverage (`NFA-COV-*`)              | Coverage-Report im Repository plus reproduzierbares Build-Target                         |
+| Quality Gates (`NFA-QG-*`)          | dokumentiertes Gate-Skript (Build-Target oder CI-Job), das das Gate auswertet            |
 | Performance (`NFA-PERF-*`)          | reproduzierbares Messprotokoll oder Benchmark im Repository                              |
 | Sicherheits-/Datenschutz (`NFA-SEC`, `NFA-LOG`) | automatisierter Test oder dokumentiertes Reviewprotokoll                      |
 | Sonstige NFA (`NFA-*`)              | automatisierter Test oder reproduzierbarer manueller Test                                |
@@ -71,9 +75,10 @@ Kapitel 5.
 IDs folgen dem Muster `GG-<Bereich>-<NNN>` mit dreistelliger Nummer.
 Bereiche umfassen `LESE`, `ZB`, `PE`, `PUE`, `MOD`, `MVP`, `FA-CAT`,
 `FA-PROJ`, `FA-DOC`, `FA-VAL`, `FA-FILL`, `FA-EXPORT`, `FA-SRC`, `NONGOAL`,
-`ARCH`, `DATA`, `AI`, `NFA-SEC`, `NFA-USE`, `NFA-MAINT`, `NFA-TEST`,
-`NFA-PERF`, `NFA-INSTALL`, `NFA-LOG`, `NFA-BACKUP`, `NFA-I18N`, `NFA-A11Y`,
-`LIC`, `ACCEPT`, `RISK`, `ASSUMP`, `DEC`.
+`ARCH`, `PRINC`, `CC`, `DATA`, `AI`, `NFA-SEC`, `NFA-USE`, `NFA-MAINT`,
+`NFA-TEST`, `NFA-COV`, `NFA-QG`, `NFA-PERF`, `NFA-INSTALL`, `NFA-LOG`,
+`NFA-BACKUP`, `NFA-I18N`, `NFA-A11Y`, `LIC`, `ACCEPT`, `RISK`, `ASSUMP`,
+`DEC`.
 
 `DEC` bezeichnet getroffene MVP-Festlegungen, `ASSUMP` dokumentierte
 Annahmen. Ein Bereich `OPEN` fuer noch nicht entschiedene Punkte kann bei
@@ -805,6 +810,159 @@ Belegende ADRs:
 Akzeptanz: Stack-Entscheidungen sind im Repository als ADR unter
 `docs/plan/adr/` dokumentiert; Abweichungen sind begruendet.
 
+### GG-PRINC-001 - SOLID-Prinzipien
+
+Prioritaet: MVP
+
+Das System muss nach SOLID-Prinzipien entwickelt werden.
+
+Akzeptanz: Architekturentscheidungen und Code-Reviews pruefen
+Einzelverantwortung, Erweiterbarkeit, Austauschbarkeit, kleine
+Schnittstellen und Abhaengigkeiten gegen Abstraktionen fuer
+geaenderte Kernmodule. Eine Belegmatrix in der Traceability
+(Kapitel 15) verknuepft die Teilanforderungen GG-PRINC-002 bis
+GG-PRINC-006 mit Architekturtests, Lint-Regeln oder Code-Review.
+
+### GG-PRINC-002 - Einzelverantwortung (SRP)
+
+Prioritaet: MVP
+
+Module, Klassen und Tauri-Commands muessen eine klare Einzelverantwortung
+besitzen.
+
+Akzeptanz: Ein Modul hat einen fachlich benennbaren Grund fuer
+Aenderungen. Vermischungen von Domainlogik, Persistenz, UI und
+externer Integration werden durch Architekturtests, Code-Review oder
+dokumentierte Ausnahme erkannt.
+
+### GG-PRINC-003 - Offen fuer Erweiterung (OCP)
+
+Prioritaet: MVP
+
+Erweiterungen sollen ohne Aenderung bestehender Kernlogik moeglich
+sein.
+
+Akzeptanz: Neue Profile, Falltypen, Regeln und Adapter koennen ueber
+definierte Ports, Registries oder Daten ergaenzt werden, ohne den
+fachlichen Kern zu veraendern (siehe GG-ARCH-002, GG-NFA-MAINT-001).
+
+### GG-PRINC-004 - Substituierbarkeit (LSP)
+
+Prioritaet: MVP
+
+Implementierungen muessen ueber ihre definierten Schnittstellen
+austauschbar sein.
+
+Akzeptanz: Mindestens ein Port des fachlichen Kerns hat im Test eine
+alternative Implementierung, die ohne Aenderung der Domainlogik
+eingesetzt werden kann.
+
+### GG-PRINC-005 - Kleine Schnittstellen (ISP)
+
+Prioritaet: MVP
+
+Schnittstellen muessen klein und fachlich getrennt sein.
+
+Akzeptanz: Ports fuer Persistenz, Dokumentanalyse (PDF, XLSX, OCR),
+HTTP-Aufrufe, LLM-Aufrufe und UI-Steuerung sind getrennt
+dokumentiert. Adapter implementieren nur die Ports, die sie fachlich
+benoetigen.
+
+### GG-PRINC-006 - Abhaengigkeiten gegen Abstraktionen (DIP)
+
+Prioritaet: MVP
+
+Abhaengigkeiten muessen gegen Abstraktionen gerichtet sein.
+
+Akzeptanz: Domain-Module haengen nicht direkt von Infrastruktur-,
+Framework-, Transport- oder Datenbankpaketen ab. Diese Regel wird
+durch Architekturtests oder statische Importpruefungen validiert
+(siehe GG-ARCH-003).
+
+### GG-CC-001 - Kurze Funktionen
+
+Prioritaet: MVP
+
+Methoden und Funktionen sollen kurz und fokussiert sein.
+
+Akzeptanz: Produktionscode ueberschreitet 30 logische Zeilen pro
+Methode oder Funktion nur mit fachlicher Begruendung (z. B. klar
+strukturierte Parser, Tabellen, generierter Code). Ein Lint-Befehl
+weist Verstoesse aus.
+
+### GG-CC-002 - Adapter ohne Businesslogik
+
+Prioritaet: MVP
+
+Infrastruktur-Adapter (driving und driven) duerfen keine Businesslogik
+enthalten.
+
+Akzeptanz: Adapter uebersetzen Protokolle, Datenformate und technische
+Fehler in Ports und Domain-Typen. Fachliche Entscheidungen liegen im
+Kern oder in Geraete- bzw. Profilmodellen (siehe GG-ARCH-004,
+GG-ARCH-006).
+
+### GG-CC-003 - Domain ohne Framework
+
+Prioritaet: MVP
+
+Domain-Module (`hexagon/core`) duerfen keine Framework-Abhaengigkeiten
+enthalten.
+
+Akzeptanz: Domain-Code importiert keine Tauri-, PDF-, XLSX-, OCR-,
+HTTP- oder LLM-Bibliotheken. Verstoesse werden durch den
+Importcheck aus GG-ARCH-003 gemeldet.
+
+### GG-CC-004 - Keine Modulzyklen
+
+Prioritaet: MVP
+
+Module duerfen keine zyklischen Abhaengigkeiten besitzen.
+
+Akzeptanz: Eine automatisierte Modul- oder Importanalyse meldet
+Zyklen als Architekturverletzung und blockiert den Build (siehe
+GG-NFA-QG-003).
+
+### GG-CC-005 - Eindeutige fachliche Namen
+
+Prioritaet: MVP
+
+Fachliche Namen muessen eindeutig und sprechend sein.
+
+Akzeptanz: Oeffentliche Typen, Ports, Commands, Events, Vokabulare
+und Warnungen verwenden Begriffe aus Lastenheft, Datenmodell und
+Profilen konsistent. Formale Konsistenz (Casing, Prefix) wird per
+Linter geprueft, fachliche Bedeutung bleibt Code-Review.
+
+### GG-CC-006 - Keine God-Utility-Klassen
+
+Prioritaet: MVP
+
+Statische Utility-God-Klassen duerfen nicht eingefuehrt werden.
+
+Akzeptanz: Wiederverwendbare Logik wird fachlich verortet oder als
+kleine, zweckgebundene Funktion bzw. Komponente implementiert.
+
+### GG-CC-007 - Immutable Domain-Objekte
+
+Prioritaet: MVP
+
+Immutable Domain-Objekte sollen bevorzugt werden.
+
+Akzeptanz: Events, Commands, Warnungen, Snapshots und
+Profilauspraegungen sind unveraenderlich oder behandeln Mutation
+explizit und lokal begrenzt.
+
+### GG-CC-008 - Explizite Fehlerbehandlung
+
+Prioritaet: MVP
+
+Fehlerbehandlung muss explizit erfolgen.
+
+Akzeptanz: Fehlerpfade liefern typisierte Fehler, Result-Typen oder
+dokumentierte Exceptions. Fehler werden nicht stillschweigend
+verschluckt und nicht nur ueber unklassifizierte Strings signalisiert.
+
 ---
 
 ## 8. Datenanforderungen
@@ -1235,6 +1393,57 @@ Prioritaet: V1
 Das Produkt soll einen optionalen Update-Mechanismus haben. Updates duerfen
 nur nach Nutzerbestaetigung heruntergeladen werden (siehe GG-NFA-SEC-002).
 
+### GG-NFA-INSTALL-004 - Build-Container
+
+Prioritaet: MVP
+
+Das Projekt muss einen containerisierten Build bereitstellen, der die
+Anforderungen aus GG-NFA-INSTALL-001 (Reproduzierbarer Build) abdeckt.
+Der Container ist ein Build- und Test-Werkzeug; er ist keine Laufzeit-
+oder Deploymentumgebung (siehe GG-NONGOAL-005).
+
+Mindestumfang:
+
+- Ein `Dockerfile` (oder gleichwertige Container-Definition) im
+  Repository startet von einer pinned Base-Image-Version und installiert
+  Rust- und Frontend-Toolchain ueber gelockte Versionen.
+- Build- und Testbefehle aus GG-NFA-INSTALL-005 laufen in diesem
+  Container ohne externe Secrets.
+- Das resultierende Tauri-Bundle ist nicht Bestandteil des Containers
+  und wird als Build-Artefakt extrahiert.
+
+Akzeptanz: Ein dokumentierter Befehl baut den Container und fuehrt
+darin `make ci` (siehe GG-NFA-INSTALL-005) erfolgreich aus. Zwei
+aufeinanderfolgende Builds auf demselben Referenzsystem unterscheiden
+sich nur in den dokumentierten nicht-deterministischen Anteilen
+gemaess GG-NFA-INSTALL-001.
+
+### GG-NFA-INSTALL-005 - Makefile-Konvention
+
+Prioritaet: MVP
+
+Das Projekt muss ein `Makefile` als kanonischen Build-Einstiegspunkt
+bereitstellen. Konkrete Tool-Aufrufe (cargo, pnpm/npm, tauri, lint,
+typecheck, test-runner) werden hinter `make`-Targets gekapselt.
+
+Pflichttargets fuer den MVP:
+
+- `make gates` - Aggregator: lint, format-check, typecheck,
+  Architekturtests, Unit- und Integrationstests, Coverage-Gates
+  (siehe GG-NFA-COV-*), Dependency-Audit.
+- `make ci` - vollstaendiger Pfad fuer CI-Lauf inklusive `gates` und
+  Bundle-Erzeugung.
+- `make fullbuild` - reproduzierbarer Build des Tauri-Bundles fuer
+  Linux (AppImage und .deb).
+- `make bundle` - Tauri-Bundle-Erzeugung (AppImage und .deb).
+- `make lint`, `make typecheck`, `make test`, `make dep-audit` -
+  Einzeltargets, die jeweils als Teilschritt von `gates` aufgerufen
+  werden.
+
+Akzeptanz: Die Targets sind im `Makefile` dokumentiert (Header oder
+`make help`). Ein leerer Lauf `make gates` auf einem frischen Checkout
+endet ohne externe Secrets und mit deterministischem Exitcode.
+
 ### GG-NFA-LOG-001 - Lokales Logging
 
 Prioritaet: MVP
@@ -1300,6 +1509,115 @@ Akzeptanz: Ein dokumentiertes manuelles Testprotokoll je MVP-Hauptansicht
 weist die vollstaendige Tastaturbedienbarkeit nach (Fokusreihenfolge,
 Aktivierung primaerer Aktionen, Schliessen modaler Dialoge). Das Protokoll
 liegt im Repository und wird mit jeder MVP-Abnahme erneuert.
+
+### GG-NFA-COV-001 - Gesamt-Testabdeckung
+
+Prioritaet: MVP
+
+Das Projekt soll eine Mindest-Line-Coverage von **80 Prozent** ueber
+den Produktionscode erreichen. Zielwert fuer spaetere Releases ist
+90 Prozent.
+
+Akzeptanz: Ein Coverage-Report im Repository weist die
+Gesamt-Coverage aus. Abweichungen werden in der Closure-Notiz des
+zugehoerigen Slice (siehe ADR 0001 §2.1) dokumentiert.
+
+### GG-NFA-COV-002 - Kritische Domainlogik
+
+Prioritaet: MVP
+
+Kritischer Domaincode muss mindestens **90 Prozent** Line-Coverage
+erreichen.
+
+Kritisch im Sinne dieser Anforderung sind:
+
+- Pflichtfeld-, Pflichtunterlagen- und Plausibilitaetsregeln
+  (`hexagon/core`-Module fuer GG-FA-VAL-001 bis GG-FA-VAL-003).
+- Dokumentklassifikation und Feldextraktion (GG-FA-DOC-001,
+  GG-MVP-006).
+- Profil- und Profilversionsverwaltung (GG-FA-CAT-001, GG-DATA-005).
+- Exportpaket-Erzeugung (GG-FA-EXPORT-001).
+- Prompt-Erzeugung und Antwort-Rueckuebernahme (GG-AI-002).
+
+Akzeptanz: Der Coverage-Report weist diese Module separat aus. Ein
+Build-Gate (siehe GG-NFA-QG-001) blockiert bei Unterschreitung.
+
+### GG-NFA-COV-003 - Branch-Coverage
+
+Prioritaet: V1
+
+Das Projekt soll mindestens 70 Prozent Branch-Coverage ueber den
+Produktionscode erreichen.
+
+Akzeptanz: Der Coverage-Report weist Branch-Coverage separat aus.
+
+### GG-NFA-COV-004 - Keine kuenstliche Coverage
+
+Prioritaet: MVP
+
+Coverage darf nicht kuenstlich erzeugt werden.
+
+Akzeptanz: Tests ohne fachliche Assertion, reine Getter-/Setter-
+Ausfuehrung und Snapshots ohne Verhaltenspruefung gelten nicht als
+Qualitaetsnachweis. Code-Review weist solche Tests zurueck oder
+markiert sie explizit als reine Smoke-Tests ausserhalb der
+Coverage-Schwelle.
+
+### GG-NFA-QG-001 - Coverage-Gate
+
+Prioritaet: MVP
+
+Der Build muss bei unterschrittener Coverage-Schwelle (siehe
+GG-NFA-COV-001, GG-NFA-COV-002) fehlschlagen.
+
+Akzeptanz: Ein dokumentiertes Build-Target (siehe GG-NFA-INSTALL-005)
+bricht bei Unterschreitung mit nicht-erfolgreichem Exitcode ab.
+Ausnahmen muessen begruendet und in der Slice-Closure dokumentiert
+sein.
+
+### GG-NFA-QG-002 - Test-Gate
+
+Prioritaet: MVP
+
+Der Build darf bei fehlschlagenden Tests nicht erfolgreich sein.
+
+Akzeptanz: Unit-, Integrations- und Architekturtests liefern einen
+nicht erfolgreichen Exitcode, wenn sie fehlschlagen, und blockieren
+`make gates` bzw. `make ci`.
+
+### GG-NFA-QG-003 - Architektur-Gate
+
+Prioritaet: MVP
+
+Der Build darf bei Architekturverletzungen nicht erfolgreich sein.
+
+Akzeptanz: Verletzungen von GG-ARCH-003 (Core-Isolation), GG-CC-003
+(Domain ohne Framework) und GG-CC-004 (keine Modulzyklen) werden
+durch automatisierte Importchecks oder Architekturtests erkannt und
+blockieren den Build.
+
+### GG-NFA-QG-004 - Statische-Analyse-Gate
+
+Prioritaet: MVP
+
+Der Build soll bei statischen Analysefehlern (Lint, Format,
+Typecheck) fehlschlagen.
+
+Akzeptanz: `make lint`, `make typecheck` und `make gates` liefern bei
+Verstoessen einen nicht erfolgreichen Exitcode. Severity-Schwelle
+ist im Toolingkonfigurationsfile dokumentiert.
+
+### GG-NFA-QG-005 - Dependency-Security-Gate
+
+Prioritaet: MVP
+
+Der Build muss bei kritischen oder hohen Security-Findings in
+Abhaengigkeiten ohne dokumentierte Ausnahme fehlschlagen.
+
+Akzeptanz: `make dep-audit` (siehe GG-NFA-INSTALL-005) liefert
+Severity, betroffene Komponente und ggf. dokumentierte Ausnahme.
+Kritische und hohe Befunde blockieren `make gates`. Ausnahmen sind
+mit Begruendung und Ablaufdatum im Repository hinterlegt.
 
 ---
 
@@ -1508,8 +1826,12 @@ Anforderung muss bei ihrer Aufnahme einer Themenzeile zugeordnet werden.
 | Portal-only-Abgrenzung      | GG-MVP-008, GG-FA-CAT-006, GG-NONGOAL-002, GG-RISK-002                   |
 | Lizenz-/Nachnutzungsstatus  | GG-FA-CAT-007, GG-NONGOAL-004, GG-LIC-001, GG-LIC-002, GG-RISK-003       |
 | Lokale Verarbeitung         | GG-NFA-SEC-001, GG-NFA-SEC-002, GG-NFA-LOG-001, GG-NFA-LOG-002           |
-| Performance und Betrieb     | GG-NFA-PERF-001, GG-NFA-PERF-002, GG-NFA-INSTALL-001 bis GG-NFA-INSTALL-003 |
+| Performance und Betrieb     | GG-NFA-PERF-001, GG-NFA-PERF-002, GG-NFA-INSTALL-001 bis GG-NFA-INSTALL-005 |
+| Build- und Test-Tooling     | GG-NFA-INSTALL-004, GG-NFA-INSTALL-005                                   |
 | Erweiterbarkeit und Tests   | GG-NFA-MAINT-001, GG-NFA-TEST-001                                        |
+| SOLID und Code-Conventions  | GG-PRINC-001 bis GG-PRINC-006, GG-CC-001 bis GG-CC-008                   |
+| Testabdeckung               | GG-NFA-COV-001 bis GG-NFA-COV-004                                        |
+| Quality Gates               | GG-NFA-QG-001 bis GG-NFA-QG-005                                          |
 | Sprache und Barrierefreiheit| GG-NFA-I18N-001, GG-NFA-A11Y-001                                         |
 | Quellenstatus               | GG-FA-SRC-001, GG-DATA-005, GG-RISK-001                                  |
 | Vokabulare und Datenmodell  | GG-DATA-001 bis GG-DATA-005                                              |
