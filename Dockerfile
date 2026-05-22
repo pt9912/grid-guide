@@ -6,17 +6,18 @@
 # und docs/plan/adr/0004 §2.6.
 #
 # Multi-Stage-Layout:
-#   - node-source : offizielles node:22.13-bookworm-slim als
-#                   Quelle fuer Node + Corepack. Wir kopieren nur
-#                   /usr/local heraus, statt einen Tarball mit
-#                   manuellem SHA-256 zu verifizieren (Docker Hub
-#                   Manifest-Digest deckt das ab).
-#   - system-deps : Base = rust:1.84-bookworm + apt-Pakete +
-#                   Node aus node-source + pnpm via Corepack.
+#   - system-deps : Base = node:22.13-bookworm-slim
+#                   (bringt Node + Corepack + npm/npx intakt).
+#                   Rust-Toolchain wird via rustup-init nachinstalliert
+#                   (Rust und Node von oben mischen umgekehrt brach
+#                   Corepacks Symlink-Layout — `Cannot find module
+#                   './lib/corepack.cjs'`). apt-Pakete fuer Tauri-2.x
+#                   Linux-Build.
 #   - tools       : alle cargo-Tools (cargo-llvm-cov, cargo-audit,
 #                   cargo-modules, tauri-cli), je Tool eigener RUN
 #                   fuer sauberen Layer-Cache.
-#   - gates       : Sourcen + Frontend-Install; CMD ist `make gates`.
+#   - gates       : Sourcen + Cargo-Fetch + Frontend-Install;
+#                   CMD ist `make gates`.
 #
 # Reproduzierbarkeit: alle Versionen sind ueber ARG gepinnt; bei
 # Aenderung muss die Slice-Closure-Notiz in done/ aktualisiert
@@ -28,7 +29,7 @@
 # in frontend/package.json gepflegt werden. Beim Bump beide Stellen
 # updaten.
 
-ARG RUST_VERSION=1.84
+ARG RUST_VERSION=1.84.0
 ARG NODE_VERSION=22.13
 ARG PNPM_VERSION=9.15.0
 ARG CARGO_LLVM_COV_VERSION=0.6.16
@@ -37,24 +38,23 @@ ARG CARGO_MODULES_VERSION=0.17.0
 ARG TAURI_CLI_VERSION=2.11.2
 
 # ============================================================
-# Stage 0: Node-Quelle aus offiziellem Image
+# Stage 1: System-Dependencies (Node + Rust + apt + pnpm)
 # ============================================================
-FROM node:${NODE_VERSION}-bookworm-slim AS node-source
+FROM node:${NODE_VERSION}-bookworm-slim AS system-deps
 
-# ============================================================
-# Stage 1: System-Dependencies
-# ============================================================
-FROM rust:${RUST_VERSION}-bookworm AS system-deps
-
+ARG RUST_VERSION
 ARG PNPM_VERSION
 
-# Tauri-2.x-Linux-Build-Abhaengigkeiten gemaess Tauri-Docs fuer
-# Bookworm. libsoup-3.0-dev ist transitiv via webkit2gtk-4.1, wird
-# aber explizit gelistet (M1-Slice-Plan §3 W5).
+# Tauri-2.x-Linux-Build-Abhaengigkeiten + Rust-Compile-Tooling.
+# libsoup-3.0-dev ist transitiv via webkit2gtk-4.1, wird aber
+# explizit gelistet (M1-Slice-Plan §3 W5).
 # libxdo-dev nur fuer global-shortcut/clipboard-Plugins — in M1
 # nicht aktiviert; bewusst weggelassen.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
+        build-essential \
+        ca-certificates \
+        curl \
         libwebkit2gtk-4.1-dev \
         libsoup-3.0-dev \
         libssl-dev \
@@ -64,23 +64,28 @@ RUN apt-get update \
         patchelf \
         file \
         make \
-        ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Node-Toolchain aus offiziellem node:bookworm-slim-Image kopieren.
-# Beide Basen sind Debian Bookworm -> dynamisches Linking
-# kompatibel. Vermeidet manuellen Tarball-Hash (H5-Review-Finding).
-COPY --from=node-source /usr/local/bin/node                    /usr/local/bin/node
-COPY --from=node-source /usr/local/bin/npm                     /usr/local/bin/npm
-COPY --from=node-source /usr/local/bin/npx                     /usr/local/bin/npx
-COPY --from=node-source /usr/local/bin/corepack                /usr/local/bin/corepack
-COPY --from=node-source /usr/local/lib/node_modules            /usr/local/lib/node_modules
-COPY --from=node-source /usr/local/include/node                /usr/local/include/node
+# Rust via rustup. Toolchain-Version aus ARG gepinnt; rustup
+# installiert systemweit nach /usr/local/cargo + /usr/local/rustup.
+ENV RUSTUP_HOME=/usr/local/rustup \
+    CARGO_HOME=/usr/local/cargo \
+    PATH=/usr/local/cargo/bin:${PATH}
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -o /tmp/rustup-init.sh \
+    && sh /tmp/rustup-init.sh -y --no-modify-path --profile minimal \
+        --default-toolchain "${RUST_VERSION}" \
+        --component rustfmt --component clippy \
+    && rm /tmp/rustup-init.sh \
+    && rustc --version \
+    && cargo --version
 
 # pnpm via Corepack, pinned auf die in frontend/package.json
-# deklarierte `packageManager`-Version.
+# deklarierte `packageManager`-Version. Corepack ist im node-Image
+# vorinstalliert.
 RUN corepack enable \
-    && corepack prepare "pnpm@${PNPM_VERSION}" --activate
+    && corepack prepare "pnpm@${PNPM_VERSION}" --activate \
+    && pnpm --version
 
 # ============================================================
 # Stage 2: Cargo-Tools
