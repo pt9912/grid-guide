@@ -312,6 +312,12 @@ Themen, die nach M8 in eigenen Meilensteinen entstehen koennen:
   `GG-MOD-007`).
 - **macOS und Windows als Erstklass-Plattformen** (heute
   Best-Effort gemaess `GG-NFA-CICD-002`).
+- **SBOM-Erzeugung** (Software Bill of Materials) — heute keine
+  Lastenheft-Anforderung; vor V1-Release fuer Lieferketten-
+  Transparenz erwaegen.
+- **Telemetrie- und Status-Badges in der README** — operative
+  Komfortfunktion, kein ADR-Material; zusammen mit
+  V1-Release-Workflow.
 
 ---
 
