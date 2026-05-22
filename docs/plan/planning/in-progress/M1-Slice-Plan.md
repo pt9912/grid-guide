@@ -69,6 +69,17 @@ abgehakt ist.
     (ADR 0001 §2.2-2.4), Trigger-Workflow (ADR 0001 §2.1).
 - **Verifikation:** `git status` clean; `cat README.md` zeigt
   Quick-Start.
+- **DoD:**
+  - [x] `.editorconfig` deckt Rust/TS/Markdown/Makefile-Indent ab.
+  - [x] `.gitignore` deckt Rust/Cargo + Node/pnpm + SvelteKit/Vite +
+        Tauri-Targets + Coverage + IDE-Artefakte + `.env`-Secrets.
+  - [x] `README.md` mit Kurzbeschreibung, Status-Pointer auf
+        Roadmap + M1-Slice-Plan, Quick-Start-Block, Doku-Index,
+        Plattform-Aussage, MIT-Lizenz.
+  - [x] `AGENTS.md` deckt ASCII-Konvention, GG-/ADR-IDs,
+        ADR-Lifecycle inkl. Immutabilitaet, Trigger-Workflow,
+        Coverage- und Excludes-Politik, Quality-Gates,
+        Commit-Konvention `M<N>-W<M>:`.
 
 ### Welle 1 — Rust-Workspace und hexagonales Layout
 
@@ -87,6 +98,20 @@ abgehakt ist.
   - `Cargo.lock` eingecheckt.
 - **Verifikation:** `cargo build --locked` gruen; `cargo test`
   gruen (auch ohne Tests).
+- **DoD:**
+  - [x] `rust-toolchain.toml` pinned Rust 1.84 + clippy + rustfmt.
+  - [x] `src-tauri/Cargo.toml` als Workspace + Package, MSRV 1.84,
+        Lints konservativ (`unsafe_code = forbid`,
+        `clippy::pedantic = warn`).
+  - [x] `src-tauri/src/main.rs` mit `greet` und 2 Unit-Tests
+        (Name + leerer-Name-Resilienz).
+  - [x] 8 `mod.rs` fuer `hexagon/{core,ports/{driving,driven}}`
+        und `adapters/{driving,driven}` mit dokumentierenden
+        Kommentaren ohne Behavior.
+  - [ ] `cargo build --locked` und `cargo test` gruen — deferred
+        auf Welle 5 (Container-Lauf).
+  - [ ] `Cargo.lock` eingecheckt — deferred auf Welle 5 (wenn
+        erste externe Deps via Tauri verifiziert).
 
 ### Welle 2 — SvelteKit-Frontend und Tauri-Integration
 
@@ -116,6 +141,43 @@ abgehakt ist.
     Dieser Schritt ist kein Pflicht-Verifikationsbaustein, weil er
     in headless Umgebungen (CI, Container) nicht reproduzierbar
     ist.
+- **DoD:**
+  - [x] `frontend/package.json` mit `pnpm@9.15.0` (Corepack-Pin),
+        SvelteKit 2.60.1, Svelte 5.55.9, Vite 8.0.14, Vitest 4.1.7,
+        Tauri-CLI 2.11.2, ESLint 10.4.0.
+  - [x] `frontend/svelte.config.js` mit `adapter-static`
+        (SPA-Modus, `fallback: index.html`).
+  - [x] `frontend/vite.config.ts` mit Tauri-Port-Binding
+        (`port: 1420`, `strictPort: true`).
+  - [x] `frontend/vitest.config.ts` mit `coverage.thresholds.lines
+        = 80` gemaess `GG-NFA-COV-001`.
+  - [x] `frontend/eslint.config.js` (Flat-Config,
+        `eslint-plugin-svelte` v3 Namespace).
+  - [x] `frontend/.prettierrc` mit konsistenter Konvention
+        (single quotes, 2 spaces, LF).
+  - [x] `frontend/src/app.html` mit `lang="de"` gemaess
+        `GG-NFA-I18N-001`.
+  - [x] `frontend/src/routes/+layout.svelte` mit sichtbarem
+        Tastatur-Fokusring (`GG-NFA-A11Y-001`-MVP-Vorbereitung).
+  - [x] `frontend/src/routes/+page.svelte` mit Hello-Seite +
+        Tauri-Command-Demo (`greet`) inkl. `aria-live`-Output und
+        `role="alert"`-Fehlerpfad.
+  - [x] `frontend/src/routes/page.test.ts` mit drei
+        `@testing-library/svelte`-Tests (Render, Erfolg, Fehler).
+  - [x] `src-tauri/Cargo.toml` erweitert um `tauri 2.11`,
+        `tauri-build 2.0.6`, `serde 1.0.217`, `serde_json 1.0.135`.
+  - [x] `src-tauri/build.rs` mit `tauri_build::build()`.
+  - [x] `src-tauri/tauri.conf.json`: identifier `de.gridguide.app`,
+        `productName: GridGuide`, `frontendDist: ../frontend/build`,
+        `bundle.active: false` (Skelett-Stand).
+  - [x] `src-tauri/capabilities/default.json` mit `core:default`
+        fuer Window `main`.
+  - [x] `src-tauri/src/main.rs`: `greet` als
+        `#[tauri::command]`, `tauri::Builder` registriert,
+        `windows_subsystem = "windows"` im Release-Build.
+  - [ ] `pnpm tauri build` erzeugt Linux-Bundle ohne Fehler;
+        Smoke-Test des AppImage — deferred auf Welle 5 (Container).
+  - [ ] `pnpm-lock.yaml` eingecheckt — deferred auf Welle 5.
 
 ### Welle 3 — Makefile mit allen Pflichttargets
 
@@ -133,6 +195,28 @@ abgehakt ist.
 - **Verifikation:** `make help` zeigt mindestens die acht
   Pflichttargets; `make test-rust` und `make test-frontend` laufen
   jeweils gruen (auch ohne fachliche Tests).
+- **DoD:**
+  - [x] `Makefile` mit den 8 Pflichttargets aus
+        `GG-NFA-INSTALL-005`: `gates`, `ci`, `fullbuild`, `bundle`,
+        `lint`, `typecheck`, `test`, `dep-audit`.
+  - [x] Per-Stack-Sub-Targets (`-rust` und `-frontend`) gemaess
+        ADR 0004 §2.1/§2.2.
+  - [x] Zusatztargets `format-check`, `coverage`,
+        `coverage-critical`, `arch-check`, `container-gates`,
+        `clean`.
+  - [x] `make help` auto-generiert aus `##`-Kommentaren; nur
+        kanonische Einstiegspunkte werden gezeigt
+        (Sub-Targets ohne `##` bleiben implementation detail).
+  - [x] `gates` ruft Sub-Targets in Reihenfolge
+        `format-check → lint → typecheck → test → coverage →
+        arch-check → dep-audit`.
+  - [x] Stub-Schutz fuer `arch-check` (vor Welle 4) und
+        `container-gates` (vor Welle 5) — beide exitieren gruen
+        mit Hinweis, falls Artefakt noch fehlt.
+  - [x] `frontend/package.json`-Scripts entkoppelt:
+        `lint` = nur ESLint; `format:check` = nur Prettier.
+  - [ ] `make test-rust` und `make test-frontend` tatsaechlich
+        gruen — deferred auf Welle 5 (Toolchains im Container).
 
 ### Welle 4 — Architektur-Check und Coverage-Tooling
 
@@ -193,6 +277,30 @@ abgehakt ist.
   `coverage.thresholds.lines = 80`. Coverage-Excludes sind im jeweils
   zugehoerigen Konfig-File dokumentiert und im Coverage-Report als
   „excluded files"-Sektion sichtbar.
+- **DoD:**
+  - [x] `tools/arch-check.sh` (executable) mit drei Regeln:
+        A (Core-Isolation), B (keine `impl`-Bloecke in
+        `hexagon/ports`), C (keine Ports → core/adapters-Imports).
+  - [x] Rule D (echte Zyklen-Erkennung via `cargo modules`)
+        explizit als V1-TODO dokumentiert.
+  - [x] `tests/arch-fixtures/core/bad_framework_import.rs`
+        verstoesst gegen Rule A.
+  - [x] `tests/arch-fixtures/ports/bad_impl_block.rs`
+        verstoesst gegen Rule B.
+  - [x] `tests/arch-fixtures/README.md` erklaert Zweck und
+        Konvention.
+  - [x] `make arch-check` (Default) gruen — keine Verstoesse im
+        realen `hexagon/`-Tree.
+  - [x] `ARCH_CHECK_FIXTURES=on make arch-check` rot mit
+        Exitcode 1 und genau 2 gemeldeten Verstoessen.
+  - [x] Meta-Check im Script: falls Fixtures aktiv und weniger
+        als 2 Verstoesse erkannt, exitet Script mit Code 2
+        (Script-defekt-Signal).
+  - [x] Coverage-Schwellen in `vitest.config.ts` (`lines = 80`)
+        und `make coverage-rust` (`--fail-under-lines 80`) sind
+        verdrahtet (in Welle 2/3 angelegt, hier finalisiert).
+  - [ ] `cargo llvm-cov` als pinned Cargo-Tool im Dockerfile
+        installiert — deferred auf Welle 5.
 
 ### Welle 5 — Build-Container
 
@@ -234,6 +342,23 @@ abgehakt ist.
   liegen nach dem Lauf in `.coverage/`. Reproduzierbarkeitstest:
   zwei aufeinanderfolgende Laeufe unterscheiden sich nur in
   Zeitstempeln.
+- **DoD:**
+  - [ ] Multi-Stage `Dockerfile` mit gepinnten Versionen
+        (Rust-Toolchain, Node-Image, pnpm via Corepack).
+  - [ ] `apt`-Pakete mit expliziten Versionen aus Bookworm-Snapshot
+        (`webkit2gtk-4.1`, `libsoup-3.0`, `libappindicator3-1`,
+        `libssl-dev`).
+  - [ ] `cargo install --locked --version <X.Y.Z>` fuer
+        `cargo-llvm-cov`, `cargo-audit`, `cargo-modules`,
+        `cargo-tauri`.
+  - [ ] `make container-gates` baut den Container und fuehrt
+        `make gates` darin gruen aus.
+  - [ ] `pnpm install` im Container erzeugt `pnpm-lock.yaml`;
+        `cargo build --locked` erzeugt `Cargo.lock`; beide werden
+        nach Welle-5-Verifikation committed.
+  - [ ] `scripts/repro-check.sh` baut den Container zweimal und
+        diff't Image-Hashes minus dokumentierter
+        nicht-deterministischer Anteile (`GG-NFA-INSTALL-001`).
 
 ### Welle 6 — GitHub-Actions-CI-Matrix
 
@@ -258,6 +383,25 @@ abgehakt ist.
   Linux gruen (Pflichtcheck), macOS/Windows gruen oder
   best-effort-rot. `release.yml` per `workflow_dispatch` erzeugt
   einen Release-Entwurf mit drei Bundles.
+- **DoD:**
+  - [ ] `.github/workflows/gates.yml` mit Plattform-Matrix
+        `linux/macos/windows` und plattformspezifischer
+        Vorinstallation.
+  - [ ] `Swatinem/rust-cache@v2` plus `actions/setup-node@v4`
+        Cache eingebaut; Cache-Keys plattformspezifisch.
+  - [ ] Linux-Job laeuft `make gates` gruen und ist als
+        Required-Check in Branch-Protection hinterlegt
+        (`GG-NFA-CICD-002`).
+  - [ ] macOS- und Windows-Jobs laufen `make gates` durch und
+        sind als Best-Effort markiert (kein blocking merge).
+  - [ ] Coverage-Reports werden als Workflow-Artefakte
+        hochgeladen.
+  - [ ] `.github/workflows/release.yml` als `workflow_dispatch`-
+        Stub mit `tauri-apps/tauri-action@<sha>` und
+        Plattform-Matrix; erzeugt unsignierte Bundles im MVP.
+  - [ ] `AGENTS.md` um Branch-Protection-Hinweis ergaenzt
+        (gemaess Vorlage in `AGENTS.md` selbst, Sektion
+        „Branch-Protection (M1-Welle 6 nachgepflegt)").
 
 ### Welle 7 — Architecture.md-Skelett und ADR-Closure
 
@@ -289,6 +433,25 @@ abgehakt ist.
   die vier Sektionen; ADR-README-Index zeigt 0004 und 0005 als
   `Accepted`; Trigger 001 ist nach `done/` verschoben; M1-Plan
   selbst wandert nach `done/` (Slice abgeschlossen).
+- **DoD:**
+  - [ ] `spec/architecture.md`-Skelett mit den vier Sektionen
+        (`GG-AR-COMP-*` Komponenten, `GG-AR-PORT-*` Ports,
+        `GG-AR-TABU-001..003` Tabus, `GG-AR-OPEN-*` Slots).
+  - [ ] Trigger 001 (`architecture.md-Skelett`) ist von `open/`
+        nach `done/` gewandert mit Closure-Notiz.
+  - [ ] ADR 0004 auf `Accepted` gehoben; `Status geaendert am`
+        gesetzt; Roadmap §5-Vorbedingungen aktualisiert.
+  - [ ] ADR 0005 auf `Accepted` gehoben; `Status geaendert am`
+        gesetzt; Roadmap §5-Vorbedingungen aktualisiert.
+  - [ ] `docs/plan/adr/README.md` Schaerfungs-Spalte ist
+        konsistent gefuehrt.
+  - [ ] `done/M1-Slice-Plan-results.md` Closure-Notiz mit
+        Welle-Tabelle (Datum + Commit-SHA pro Welle, offene
+        Punkte fuer M2).
+  - [ ] Requirements-Matrix gemaess `GG-ACCEPT-003` aktualisiert:
+        alle M1-Anforderungen tragen `umgesetzt`.
+  - [ ] M1-Slice-Plan wandert von `in-progress/` nach `done/`.
+  - [ ] Roadmap M1-Status auf `Done` mit Verweis auf Closure.
 
 ---
 
