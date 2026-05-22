@@ -6,7 +6,7 @@
 # und docs/plan/adr/0004 §2.6.
 #
 # Multi-Stage-Layout:
-#   - system-deps : Base = node:22.13-bookworm-slim
+#   - system-deps : Base = node:24.14-bookworm-slim
 #                   (bringt Node + Corepack + npm/npx intakt).
 #                   Rust-Toolchain wird via rustup-init nachinstalliert
 #                   (Rust und Node von oben mischen umgekehrt brach
@@ -29,8 +29,8 @@
 # in frontend/package.json gepflegt werden. Beim Bump beide Stellen
 # updaten.
 
-ARG RUST_VERSION=1.87.0
-ARG NODE_VERSION=22.13
+ARG RUST_VERSION=1.95.0
+ARG NODE_VERSION=24.14.0
 ARG PNPM_VERSION=9.15.0
 ARG CARGO_LLVM_COV_VERSION=0.6.16
 ARG CARGO_AUDIT_VERSION=0.21.0

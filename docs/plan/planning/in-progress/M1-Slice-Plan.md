@@ -99,12 +99,13 @@ abgehakt ist.
 - **Verifikation:** `cargo build --locked` gruen; `cargo test`
   gruen (auch ohne Tests).
 - **DoD:**
-  - [x] `rust-toolchain.toml` pinned Rust 1.87.0 + clippy + rustfmt
-        (initial 1.84, mit erstem Container-Lauf auf 1.87 angehoben,
-        weil tauri-2.11-Ecosystem-Crates wie `serde_spanned 1.1.1`
-        `edition2024` (Rust ≥ 1.85) und `wasip2`/`wit-bindgen`
-        Rust ≥ 1.87 verlangen).
-  - [x] `src-tauri/Cargo.toml` als Workspace + Package, MSRV 1.87,
+  - [x] `rust-toolchain.toml` pinned Rust 1.95.0 + clippy + rustfmt
+        (initial 1.84, mit erstem Container-Lauf auf aktuelles
+        Stable 1.95.0 angehoben — tauri-2.11-Ecosystem-Crates
+        wie `serde_spanned 1.1.1` verlangen `edition2024`
+        (Rust ≥ 1.85), `wasip2`/`wit-bindgen` verlangen ≥ 1.87;
+        1.95.0 ist die aktuelle Stable-Linie).
+  - [x] `src-tauri/Cargo.toml` als Workspace + Package, MSRV 1.95,
         Lints konservativ (`unsafe_code = forbid`,
         `clippy::pedantic = warn`).
   - [x] `src-tauri/src/main.rs` mit `greet` und 2 Unit-Tests
@@ -314,9 +315,9 @@ abgehakt ist.
   - `Dockerfile` Multi-Stage mit durchgehend gepinnten Versionen
     (ohne `latest`-Tags, ohne unversionierte `cargo install`-Aufrufe):
     - Base auf konkreter Rust-Toolchain-Version
-      (z. B. `rust:1.87-bookworm`); Node-Version per
+      (z. B. `rust:1.95-bookworm`); Node-Version per
       `actions/setup-node`-Aequivalent in der Frontend-Stage
-      (z. B. `node:22.13-bookworm-slim`); pnpm via `corepack
+      (z. B. `node:24.14-bookworm-slim`); pnpm via `corepack
       enable pnpm@<version>` pinned.
     - Stage `build-deps`: `apt-get install` mit
       `--no-install-recommends` und expliziten Versionen
@@ -348,8 +349,8 @@ abgehakt ist.
   Zeitstempeln.
 - **DoD:**
   - [x] Multi-Stage `Dockerfile` mit gepinnten Versionen
-        (Rust-Toolchain via Base-Image-Tag, Node 22.13 als Binary-
-        Tarball, pnpm 9.15.0 via Corepack; vier cargo-Tools per
+        (Rust 1.95.0 via rustup auf node:24.14-bookworm-slim als
+        Basis, pnpm 9.15.0 via Corepack; vier cargo-Tools per
         `cargo install --locked --version <X.Y.Z>`).
   - [ ] `apt`-Pakete mit expliziten `=<version>`-Pins aus
         Bookworm-Snapshot — Closure-Item, wird nach erstem
