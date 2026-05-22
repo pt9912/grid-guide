@@ -1,10 +1,12 @@
 # Roadmap — grid-guide
 
 **Status:** Aktiv — Spezifikationsphase abgeschlossen, **M1 aktiv**
-(Welle 0 laeuft).
+(Wellen 0-5 substantiell geliefert, Container-Lauf in
+Verifikation; W6 + W7 offen).
 **Stand:** 2026-05-22 (Lastenheft v0.4.0; ADRs 0001/0002/0003
 `Accepted`; ADRs 0004/0005 `Provisional` mit Spike-Vertrag, der mit
-M1 geschlossen wird).
+M1 geschlossen wird; `frontend/pnpm-lock.yaml` aus M1-W5
+`make lock-refresh` committed).
 **Bezug:** [Lastenheft](../../../../spec/lastenheft.md);
 [ADR-Index](../../adr/README.md);
 [Trigger 001 — architecture.md-Skelett](../open/001-architecture-md-skeleton.md).
@@ -52,7 +54,10 @@ Code-Skelett `GG-AR-*`-Kennungen einfordert (siehe Trigger 001).
 ### M1 — Foundation, Build-Tooling und CI
 
 **Slice-Plan:** [`in-progress/M1-Slice-Plan.md`](M1-Slice-Plan.md)
-(aktiviert 2026-05-22; Welle 0 laeuft).
+(aktiviert 2026-05-22; Stand: W0-W4 geliefert + reviewt + gefixt;
+W5 Dockerfile + scripts/repro-check.sh + lock-refresh-Tool
+geliefert, frontend/pnpm-lock.yaml committed, Container-`make
+gates`-Run in Verifikation; W6 + W7 offen).
 
 - **Lieferziel:** lokales Repo-Skelett, mit dem `make gates` lokal
   und in CI gruen laeuft.
@@ -96,7 +101,8 @@ Code-Skelett `GG-AR-*`-Kennungen einfordert (siehe Trigger 001).
         `GG-AR-PORT-*` und `GG-AR-TABU-*`-Stubs.
   - [ ] ADR 0004 und ADR 0005 auf `Accepted` gehoben; Schaerfungs-
         Spalte in `docs/plan/adr/README.md` aktualisiert.
-- **Status:** `In Progress` (seit 2026-05-22; Welle 0 laeuft).
+- **Status:** `In Progress` (seit 2026-05-22; W0-W4 geliefert, W5
+  Container-Lauf in Verifikation, W6 + W7 offen).
 
 ### M2 — Domain-Kern und Katalog-Seed
 
@@ -337,8 +343,24 @@ Geschlossen:
 Offen (werden in M1 geschlossen):
 
 - **ADR 0004** (`Provisional`) — Quality-Gates- und
-  Coverage-Tooling. Spike-Vertrag in §4 ist M1-DoD.
+  Coverage-Tooling. Spike-Vertrag §4: `make container-gates`-Run
+  gruen + Skelett-Coverage ≥ 80 % + arch-check-Fixtures rot. Wechsel
+  auf `Accepted` mit M1-W7-Closure.
 - **ADR 0005** (`Provisional`) — CI/Release mit GitHub Actions +
-  `tauri-action`. Spike-Vertrag in §4 ist M1-DoD.
+  `tauri-action`. Spike-Vertrag §4: `.github/workflows/gates.yml`
+  Linux required-check gruen + macOS/Windows-Best-Effort
+  durchlaufen. Wechsel auf `Accepted` mit M1-W7-Closure.
 - **Trigger 001** (`open`) — `spec/architecture.md`-Skelett. Wird
-  mit M1 nach `done/` ueberfuehrt.
+  mit M1-W7 nach `done/` ueberfuehrt.
+
+Im Laufe von M1 neu eroeffnet (Review- und Build-Findings):
+
+- **Trigger 002-005** (`open`) — Folge-ADRs fuer M3-M6
+  (Datei-Schema, Regel-Repraesentation, PDF-/XLSX-Library,
+  Frontend-State-Management).
+- **Trigger 006-007** (`open`) — Dependabot/Renovate-Konfig,
+  E2E-Test-Stack.
+- **Trigger 008-009** (`open`) — Tauri-CSP-Policy,
+  Tauri-Capability-Permissions.
+- **Trigger 010-011** (`open`) — apt-Snapshot-Pinning,
+  Bundle-Reproduzierbarkeit (beide aus M1-W5-Review).

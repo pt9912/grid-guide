@@ -13,23 +13,40 @@ oder fachkundige Elektroinstallateure (siehe
 ## Status
 
 Aktiv in Entwicklung — **M1 (Foundation, Build-Tooling und CI)**
-laeuft. Siehe
+laeuft, Wellen 0-5 geliefert (Container-Lauf in Verifikation),
+Wellen 6 (GitHub-Actions-Matrix) und 7 (architecture.md +
+ADR-Closure) noch offen. Siehe
 [Roadmap](docs/plan/planning/in-progress/roadmap.md) und
 [M1-Slice-Plan](docs/plan/planning/in-progress/M1-Slice-Plan.md).
 
 ## Quick-Start
 
-Vorbedingungen werden in M1 nachgepflegt; bis dahin gilt:
+Vorbedingung: **Docker** installiert (alle Build-/Test-Pfade laufen
+im pinned Container). Node, pnpm, Rust und cargo-Tools werden im
+Container bereitgestellt — auf dem Host nicht erforderlich.
 
 ```sh
-# Wenn das Skelett-Repo aufgesetzt ist:
-make gates       # alle Quality-Gates lokal ausfuehren
-make ci          # gates + Bundle-Erzeugung
-make fullbuild   # nur Linux-Bundle (AppImage + .deb)
+# Lockfile generieren (einmalig oder nach Dependency-Aenderung):
+make lock-refresh        # pnpm install --lockfile-only im Container
+
+# Quality Gates lokal im Container:
+make container-gates     # docker build + make gates im Container
+
+# Voller CI-Lauf inkl. Bundle (extrahiert nach dist/):
+make container-ci
+
+# Reines Lint/Format/Test direkt (wenn Toolchains lokal vorhanden):
+make gates               # alle Gates lokal
+make ci                  # gates + Bundle
+make fullbuild           # nur Linux-Bundle (AppImage + .deb)
+make help                # vollstaendige Target-Liste
 ```
 
-Bis M1-Welle 3 (`Makefile`) existiert, sind die Targets noch nicht
-bedienbar.
+Reproduzierbarkeitsnachweis via:
+
+```sh
+bash scripts/repro-check.sh   # baut Container 2x, vergleicht Binary-Hash
+```
 
 ## Dokumentation
 
