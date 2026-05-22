@@ -33,7 +33,7 @@ der in einer aelteren `Accepted`-ADR steht, **immer pruefen, ob eine
 Folge-ADR in der „Schaerfungen"-Spalte oben die Stelle schaerft.** Im
 Zweifel:
 
-1. Folge-ADR lesen — sie traegt die maßgebliche Fassung.
+1. Folge-ADR lesen — sie traegt die massgebliche Fassung.
 2. Original-ADR-Stelle bleibt historisch (kein Edit per
    [`ADR 0001`](0001-documentation-and-planning-structure.md) §2.3).
 3. Code- und Modul-Docstrings zitieren beide ADRs ueber den

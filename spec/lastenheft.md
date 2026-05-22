@@ -1643,13 +1643,16 @@ gewaehlte CI-Anbieter ist im begleitenden ADR dokumentiert.
 
 ### GG-NFA-CICD-002 - Plattform-Matrix
 
-Prioritaet: MVP fuer Linux; V1 fuer Windows und macOS.
+Prioritaet: MVP (Linux als Pflichtcheck, macOS und Windows als
+Best-Effort); V1 (macOS und Windows als Pflichtcheck).
 
 Die CI-Pipeline muss `make gates` und einen Bundle-Build fuer Linux
-ausfuehren. Sie soll dieselben Schritte fuer Windows und macOS als
-Best-Effort mitlaufen lassen.
+ausfuehren und ihn als Pflichtcheck (Required Check) fuehren. Sie
+muss dieselben Schritte fuer Windows und macOS im MVP als
+Best-Effort mitlaufen lassen; voller Pflichtcheck-Status fuer macOS
+und Windows ist V1.
 
-Best-Effort bedeutet hier:
+Best-Effort bedeutet im MVP:
 
 - Fehlschlag eines macOS- oder Windows-Build-Jobs blockiert den
   Merge nur, wenn die Aenderung explizit eine plattformspezifische
@@ -1659,7 +1662,7 @@ Best-Effort bedeutet hier:
 
 Akzeptanz: Die CI-Workflow-Datei definiert eine Plattform-Matrix mit
 mindestens `linux`, `macos`, `windows`. Der Linux-Job ist
-Pflichtcheck; macOS- und Windows-Jobs sind als Best-Effort
+Pflichtcheck; macOS- und Windows-Jobs sind im MVP als Best-Effort
 markiert. Quelle des Bundle-Builds ist die Tauri-Toolchain auf der
 jeweils nativen Plattform.
 

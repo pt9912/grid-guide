@@ -170,7 +170,7 @@ Jede ADR fuehrt im Header:
   werden (→ `next/`), direkt aktiviert (→ `in-progress/`) oder verworfen
   (→ `archive/`).
 - Neue ADRs werden in `docs/plan/adr/README.md` in der Aktive-ADRs-Tabelle
-  ergaenzt. Bei Schaerfung oder Ablösung wird die "Schaerfungen"-Spalte
+  ergaenzt. Bei Schaerfung oder Abloesung wird die "Schaerfungen"-Spalte
   der **alten** ADR aktualisiert; die alte ADR selbst bleibt textlich
   unveraendert (per §2.3).
 

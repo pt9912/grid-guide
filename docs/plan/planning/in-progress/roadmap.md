@@ -63,11 +63,15 @@ Code-Skelett `GG-AR-*`-Kennungen einfordert (siehe Trigger 001).
     `GG-ARCH-003` / `GG-CC-003` / `GG-CC-004` durchsetzt.
   - `spec/architecture.md`-Skelett (siehe Trigger 001) mit
     Komponenten-, Port- und Tabu-Stubs.
-- **Lastenheft-IDs:** `GG-MVP-001`, `GG-ARCH-001..008`,
+- **Lastenheft-IDs:** `GG-MVP-001` (nur Skelett-Teil: lokal startbare
+  Tauri-App ohne fachlichen Inhalt; volle Abnahme der
+  `GG-MVP-001`-Akzeptanz mit UI-Inhalt erfolgt mit M6/M7),
+  `GG-ARCH-001..008`,
   `GG-PRINC-001..006`, `GG-CC-001..008`, `GG-NFA-INSTALL-001`,
   `GG-NFA-INSTALL-004`, `GG-NFA-INSTALL-005`, `GG-NFA-COV-001..004`
   (Skelett erfuellt Schwellen mangels Logik trivial; gilt als
-  validiert sobald M2-Domain-Code unter den Schwellen bleibt),
+  validiert sobald M2-Domain-Code die Schwellen weiterhin haelt
+  bzw. uebertrifft),
   `GG-NFA-QG-001..005`, `GG-NFA-CICD-001`, `GG-NFA-CICD-002`,
   `GG-NFA-CICD-004`.
 - **ADR-Pointer:** Validiert die Spike-Vertraege aus
@@ -118,7 +122,10 @@ Code-Skelett `GG-AR-*`-Kennungen einfordert (siehe Trigger 001).
         beim Test geladen.
   - [ ] `PV_NS_OhneSpeicher`-Falltyp ist mit Pflichtfeld- und
         Pflichtunterlagen-Liste hinterlegt.
-  - [ ] Coverage der M2-Module ≥ 90 % (`GG-NFA-COV-002`).
+  - [ ] Coverage: Profil- und Profilversionsmodule ≥ 90 % gemaess
+        `GG-NFA-COV-002` (kritische Domainlogik); restliche
+        M2-Module (Project, Falltyp, Document, Warning) ≥ 80 %
+        gemaess `GG-NFA-COV-001`.
   - [ ] Architektur-Check meldet keine Domain-zu-Adapter-Imports
         (`GG-CC-003`).
 - **Status:** `Pending`.
@@ -214,8 +221,10 @@ Code-Skelett `GG-AR-*`-Kennungen einfordert (siehe Trigger 001).
   - Zentrale Textressource fuer deutsche UI (`GG-NFA-I18N-001`).
   - Tastaturbedienbarkeit aller MVP-Hauptansichten
     (`GG-NFA-A11Y-001` MVP-Minimum) inkl. Testprotokoll.
-- **Lastenheft-IDs:** `GG-MOD-008`, `GG-ARCH-004`,
-  `GG-NFA-I18N-001`, `GG-NFA-A11Y-001`.
+- **Lastenheft-IDs:** `GG-MVP-001` (volle Akzeptanz: UI zeigt
+  Projektuebersicht, Profilauswahl und Import-/Export-Workflow;
+  Skelett-Teil bereits in M1 geliefert), `GG-MOD-008`,
+  `GG-ARCH-004`, `GG-NFA-I18N-001`, `GG-NFA-A11Y-001`.
 - **ADR-Pointer:** Folge-ADR fuer State-Management im Frontend
   (Stores pro Bounded Context) empfehlenswert.
 - **DoD-Checkliste:**
