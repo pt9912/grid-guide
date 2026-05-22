@@ -6,21 +6,30 @@
 # und docs/plan/adr/0004 §2.6.
 #
 # Multi-Stage-Layout:
-#   - system-deps : Base-Image + apt-Pakete + Node-Toolchain + pnpm.
+#   - node-source : offizielles node:22.13-bookworm-slim als
+#                   Quelle fuer Node + Corepack. Wir kopieren nur
+#                   /usr/local heraus, statt einen Tarball mit
+#                   manuellem SHA-256 zu verifizieren (Docker Hub
+#                   Manifest-Digest deckt das ab).
+#   - system-deps : Base = rust:1.84-bookworm + apt-Pakete +
+#                   Node aus node-source + pnpm via Corepack.
 #   - tools       : alle cargo-Tools (cargo-llvm-cov, cargo-audit,
-#                   cargo-modules, tauri-cli) ueber `cargo install
-#                   --locked --version <X.Y.Z>`.
+#                   cargo-modules, tauri-cli), je Tool eigener RUN
+#                   fuer sauberen Layer-Cache.
 #   - gates       : Sourcen + Frontend-Install; CMD ist `make gates`.
 #
 # Reproduzierbarkeit: alle Versionen sind ueber ARG gepinnt; bei
 # Aenderung muss die Slice-Closure-Notiz in done/ aktualisiert
-# werden. apt-Versionen folgen dem Stand des Base-Image-Tags;
-# explizite `apt-get install pkg=<version>`-Pins kommen mit der
-# Snapshot-Verifikation in M1-W5-Closure (siehe
-# scripts/repro-check.sh).
+# werden. apt-Versionen folgen aktuell dem Stand des Base-Image-
+# Tags — vollstaendige Snapshot-Reproduzierbarkeit ist offenes
+# M1-Closure-Item (siehe docs/plan/planning/open/010-apt-snapshot-pinning.md).
+#
+# pnpm-Sync: ARG PNPM_VERSION muss synchron zum packageManager-Feld
+# in frontend/package.json gepflegt werden. Beim Bump beide Stellen
+# updaten.
 
 ARG RUST_VERSION=1.84
-ARG NODE_VERSION=22.13.0
+ARG NODE_VERSION=22.13
 ARG PNPM_VERSION=9.15.0
 ARG CARGO_LLVM_COV_VERSION=0.6.16
 ARG CARGO_AUDIT_VERSION=0.21.0
@@ -28,62 +37,70 @@ ARG CARGO_MODULES_VERSION=0.17.0
 ARG TAURI_CLI_VERSION=2.11.2
 
 # ============================================================
+# Stage 0: Node-Quelle aus offiziellem Image
+# ============================================================
+FROM node:${NODE_VERSION}-bookworm-slim AS node-source
+
+# ============================================================
 # Stage 1: System-Dependencies
 # ============================================================
 FROM rust:${RUST_VERSION}-bookworm AS system-deps
 
-ARG NODE_VERSION
 ARG PNPM_VERSION
 
-# Tauri-2.x-Linux-Build-Abhaengigkeiten. Versionen folgen aktuell
-# dem Bookworm-Stand des Base-Image; explizite `=<version>`-Pins
-# werden mit M1-W5-Closure aus dem Snapshot-Verifikationsschritt
-# nachgezogen (siehe scripts/repro-check.sh).
+# Tauri-2.x-Linux-Build-Abhaengigkeiten gemaess Tauri-Docs fuer
+# Bookworm. libsoup-3.0-dev ist transitiv via webkit2gtk-4.1, wird
+# aber explizit gelistet (M1-Slice-Plan §3 W5).
+# libxdo-dev nur fuer global-shortcut/clipboard-Plugins — in M1
+# nicht aktiviert; bewusst weggelassen.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         libwebkit2gtk-4.1-dev \
+        libsoup-3.0-dev \
         libssl-dev \
         libayatana-appindicator3-dev \
         librsvg2-dev \
         libgtk-3-dev \
-        libxdo-dev \
         patchelf \
         file \
         make \
         ca-certificates \
-        curl \
-        xz-utils \
     && rm -rf /var/lib/apt/lists/*
 
-# Node-Toolchain: Binary-Tarball vom offiziellen Mirror, weil
-# Bookworm-`nodejs` zu alt ist. Tarball-Pfad ist deterministisch.
-RUN curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" \
-        | tar -xJ -C /opt \
-    && mv "/opt/node-v${NODE_VERSION}-linux-x64" /opt/node
-ENV PATH="/opt/node/bin:${PATH}"
+# Node-Toolchain aus offiziellem node:bookworm-slim-Image kopieren.
+# Beide Basen sind Debian Bookworm -> dynamisches Linking
+# kompatibel. Vermeidet manuellen Tarball-Hash (H5-Review-Finding).
+COPY --from=node-source /usr/local/bin/node                    /usr/local/bin/node
+COPY --from=node-source /usr/local/bin/npm                     /usr/local/bin/npm
+COPY --from=node-source /usr/local/bin/npx                     /usr/local/bin/npx
+COPY --from=node-source /usr/local/bin/corepack                /usr/local/bin/corepack
+COPY --from=node-source /usr/local/lib/node_modules            /usr/local/lib/node_modules
+COPY --from=node-source /usr/local/include/node                /usr/local/include/node
 
-# pnpm via Corepack, pinned auf die in package.json deklarierte
-# `packageManager`-Version. Corepack lehnt eine Abweichung ab.
+# pnpm via Corepack, pinned auf die in frontend/package.json
+# deklarierte `packageManager`-Version.
 RUN corepack enable \
     && corepack prepare "pnpm@${PNPM_VERSION}" --activate
 
 # ============================================================
 # Stage 2: Cargo-Tools
 #
-# Wird nur invalidiert, wenn sich die Tool-Versionen aendern —
-# Source-Changes invalidieren nur die `gates`-Stage.
+# Pro Tool ein eigener RUN, damit ein Versions-Bump nicht den
+# gesamten Tool-Cache invalidiert (H4-Review-Finding).
 # ============================================================
 FROM system-deps AS tools
 
 ARG CARGO_LLVM_COV_VERSION
-ARG CARGO_AUDIT_VERSION
-ARG CARGO_MODULES_VERSION
-ARG TAURI_CLI_VERSION
+RUN cargo install --locked --version "${CARGO_LLVM_COV_VERSION}" cargo-llvm-cov
 
-RUN cargo install --locked --version "${CARGO_LLVM_COV_VERSION}" cargo-llvm-cov \
-    && cargo install --locked --version "${CARGO_AUDIT_VERSION}"    cargo-audit    \
-    && cargo install --locked --version "${CARGO_MODULES_VERSION}"  cargo-modules  \
-    && cargo install --locked --version "${TAURI_CLI_VERSION}"      tauri-cli
+ARG CARGO_AUDIT_VERSION
+RUN cargo install --locked --version "${CARGO_AUDIT_VERSION}" cargo-audit
+
+ARG CARGO_MODULES_VERSION
+RUN cargo install --locked --version "${CARGO_MODULES_VERSION}" cargo-modules
+
+ARG TAURI_CLI_VERSION
+RUN cargo install --locked --version "${TAURI_CLI_VERSION}" tauri-cli
 
 # cargo-llvm-cov benoetigt die llvm-tools-preview-Komponente.
 RUN rustup component add llvm-tools-preview
@@ -99,11 +116,30 @@ FROM tools AS gates
 
 WORKDIR /work
 
-# Vorab nur Manifeste kopieren — dann pnpm-Install — dann Source.
-# Damit invalidiert eine Source-Aenderung (ohne package.json-Change)
-# das pnpm-Install-Layer nicht.
+# Cargo-Deps vorgewaermt: nur Manifeste + Stub-main.rs kopieren,
+# `cargo fetch --locked` laufen lassen, dann Stub wieder loeschen.
+# Damit ueberleben Source-Aenderungen den Cargo-Layer-Cache
+# (M8-Review-Finding).
+COPY src-tauri/Cargo.toml /work/src-tauri/
+RUN mkdir -p /work/src-tauri/src \
+    && echo 'fn main() {}' > /work/src-tauri/src/main.rs \
+    && cd /work/src-tauri && cargo fetch \
+    && rm -rf /work/src-tauri/src
+
+# pnpm-Deps vorgewaermt: nur package.json + .npmrc + (optional)
+# Lockfile kopieren, dann install. Wenn pnpm-lock.yaml fehlt
+# (M1-Stand), faellt der Befehl auf `pnpm install` zurueck — sobald
+# Welle 5 das Lockfile committed hat, ist `--frozen-lockfile`
+# verbindlich (H3-Review-Finding).
 COPY frontend/package.json frontend/.npmrc /work/frontend/
-RUN cd frontend && pnpm install
+COPY frontend/pnpm-lock.yaml* /work/frontend/
+RUN cd /work/frontend \
+    && if [ -f pnpm-lock.yaml ]; then \
+         pnpm install --frozen-lockfile; \
+       else \
+         echo "WARN: pnpm-lock.yaml fehlt — fallback auf pnpm install ohne Lock"; \
+         pnpm install; \
+       fi
 
 COPY . /work
 
