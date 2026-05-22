@@ -1,0 +1,1422 @@
+# Lastenheft: `GridGuide` - Assistent fuer PV-, Speicher- und Erzeugungsanlagen-Antraege
+
+| Dokument         | Lastenheft                                                                    |
+| ---------------- | ----------------------------------------------------------------------------- |
+| Projektname      | `GridGuide`                                                                   |
+| Kurzbeschreibung | Desktop-Assistent zur Vorbereitung vollstaendiger Netz- und Behoerdenantraege |
+| Zielplattform    | Tauri Desktop-App, lokale Dokumentverarbeitung                                |
+| Hauptnutzer      | Installateure, Antragsteller, Projektentwickler                               |
+| Version          | 0.3.0                                                                         |
+| Status           | Entwurf                                                                       |
+| Datum            | 2026-05-22                                                                    |
+
+---
+
+## 0. Lesehinweise
+
+### GG-LESE-001 - Modalverben
+
+In diesem Dokument haben Modalverben folgende Bedeutung:
+
+- **muss** - verbindliche Anforderung fuer den zugeordneten Abnahmestand.
+- **darf nicht** - ausdruecklich ausgeschlossen.
+- **soll** - geplante Eigenschaft; Abweichungen muessen begruendet werden.
+- **kann** - optionale Eigenschaft ohne Abnahmeverpflichtung.
+
+MVP-blockierend sind Anforderungen, die mit Prioritaet `MVP` gekennzeichnet sind
+oder im Kapitel "MVP-Umfang" explizit genannt werden.
+
+Die Kennung `GG` steht fuer GridGuide.
+
+### GG-LESE-002 - Abnahme
+
+Eine Anforderung gilt als erfuellt, wenn der zugeordnete Belegtyp vorliegt:
+
+| Anforderungsklasse                  | Zulaessiger Beleg                                                                        |
+| ----------------------------------- | ---------------------------------------------------------------------------------------- |
+| Funktionale Anforderungen (`FA-*`)  | automatisierter Test oder reproduzierbarer manueller Test mit Demo-Artefakt              |
+| Datenanforderungen (`DATA-*`)       | automatisierter Test (z. B. Schema-/Parsertest) oder reproduzierbares Demo-Artefakt      |
+| KI-/Regelanforderungen (`AI-*`)     | reproduzierbares Demo-Artefakt (Prompt, Antwort) plus automatischer Test, wo moeglich    |
+| Architektur (`ARCH-*`)              | dokumentierter Architekturentscheid (ADR) plus statischer Import-/Strukturcheck          |
+| Performance (`NFA-PERF-*`)          | reproduzierbares Messprotokoll oder Benchmark im Repository                              |
+| Sicherheits-/Datenschutz (`NFA-SEC`, `NFA-LOG`) | automatisierter Test oder dokumentiertes Reviewprotokoll                      |
+| Sonstige NFA (`NFA-*`)              | automatisierter Test oder reproduzierbarer manueller Test                                |
+| Lizenz/Abnahme (`LIC-*`, `ACCEPT-*`)| im Repository vorhandenes Artefakt (Datei, Matrix, Beispielexport)                       |
+
+Ein dokumentierter Architekturentscheid (ADR) allein genuegt nur fuer
+`ARCH-*`-Anforderungen, nicht fuer `FA-*`, `DATA-*` oder `NFA-PERF-*`.
+
+### GG-LESE-003 - Rechtliche Abgrenzung
+
+GridGuide ist keine Rechts-, Steuer- oder Netzanschlussberatung. Er bereitet
+Einreichungspakete vor, ersetzt aber keine Pruefung durch Netzbetreiber,
+Behoerden, Steuerberatung oder fachkundige Elektroinstallateure.
+
+### GG-LESE-004 - Verhaeltnis MVP-Kapitel zu Funktionalen Anforderungen
+
+Kapitel 4 (MVP-Umfang) beschreibt den abnahmefaehigen MVP-Scope.
+
+Kapitel 5 (Funktionale Anforderungen) ist die kanonische Quelle fuer die
+einzelnen fachlichen Anforderungen mit Prioritaet `MVP` oder `V1`.
+
+Wo Kapitel 4 und Kapitel 5 dieselbe Anforderung betreffen, ist die
+MVP-Anforderung ein Verweis auf die FA-Anforderung. Im Konfliktfall gilt
+Kapitel 5.
+
+### GG-LESE-005 - ID-Schema
+
+IDs folgen dem Muster `GG-<Bereich>-<NNN>` mit dreistelliger Nummer.
+Bereiche umfassen `LESE`, `ZB`, `PE`, `PUE`, `MOD`, `MVP`, `FA-CAT`,
+`FA-PROJ`, `FA-DOC`, `FA-VAL`, `FA-FILL`, `FA-EXPORT`, `FA-SRC`, `NONGOAL`,
+`ARCH`, `DATA`, `AI`, `NFA-SEC`, `NFA-USE`, `NFA-MAINT`, `NFA-TEST`,
+`NFA-PERF`, `NFA-INSTALL`, `NFA-LOG`, `NFA-BACKUP`, `NFA-I18N`, `NFA-A11Y`,
+`LIC`, `ACCEPT`, `RISK`, `ASSUMP`, `DEC`, `OPEN`.
+
+`DEC` bezeichnet getroffene MVP-Festlegungen, `OPEN` bleibt fuer noch nicht
+entschiedene Punkte reserviert, `ASSUMP` fuer dokumentierte Annahmen.
+
+### GG-LESE-006 - Identifier-Konvention fuer Vokabulare
+
+In diesem Dokument gilt fuer Werte kontrollierter Vokabulare folgende
+Sprachkonvention, um Code-Identifier und UI-Bezeichner sauber zu trennen:
+
+- **Fachliche Vokabulare** (sichtbar in UI, Profilen, Exporten) verwenden
+  deutsche PascalCase-Bezeichner. Beispiele: `Profiltyp`, `Anlagenart`,
+  `Dokumenttyp`, `Falltyp`, `Katalogstatus` (siehe GG-DATA-004).
+- **Technische Lifecycle-Felder** (intern, nicht UI-relevant) verwenden
+  englische snake_case-Bezeichner. Beispiele: `extraction_method`, `status`
+  (siehe GG-DATA-002).
+- **Schweregrade von Warnungen** sind UI-nah und werden auf Deutsch gefuehrt
+  (`info`, `warnung`, `fehler`).
+
+Erweiterungen muessen sich an diese Konvention halten oder die Abweichung
+begruenden.
+
+---
+
+## 1. Zielbestimmung
+
+### GG-ZB-001 - Projektziel
+
+`GridGuide` soll eine lokale Desktop-Anwendung werden, die Antragsteller,
+Installateure und Projektentwickler bei der Vorbereitung vollstaendiger
+Einreichungspakete fuer PV-, Speicher- und Erzeugungsanlagen unterstuetzt.
+
+Die Anwendung soll oeffentliche PDF-/XLSX-Formulare, Katalogdaten,
+Plausibilitaetsregeln und Dokumentanalyse kombinieren, um fehlende Angaben,
+fehlende Nachweise und typische Fehler vor der Einreichung sichtbar zu machen.
+
+### GG-ZB-002 - Produktvision
+
+`GridGuide` soll sich wie ein fachlicher Vorpruefer fuer Netzanschluss-,
+Inbetriebsetzungs-, Verguetungs-, Register- und Behoerdenprozesse verhalten.
+
+Der Nutzer soll ein Projekt anlegen, Netzbetreiber oder Behoerde auswaehlen,
+Dokumente hochladen, Hinweise erhalten und ein vorbereitetes Exportpaket fuer
+Portal, PDF, XLSX, ZIP oder E-Mail erzeugen koennen.
+
+### GG-ZB-003 - Repo-Beschreibung
+
+```text
+GridGuide: Local Tauri assistant for preparing PV, storage and grid-connection submission packages.
+```
+
+---
+
+## 2. Produkteinsatz
+
+### GG-PE-001 - Anwendungsbereich
+
+Das Produkt soll fuer deutsche PV-, Speicher- und Erzeugungsanlagenprozesse
+eingesetzt werden, insbesondere fuer:
+
+- Netzanschluss und Anmeldung.
+- Inbetriebsetzung und technische Nachweise.
+- Messkonzept, Zaehlersetzung und Marktlokationen.
+- Verguetung, Betreiberwechsel und steuernahe Angaben.
+- Marktstammdatenregister und Bundesnetzagentur-Prozesse.
+- Reifegradverfahren, Redispatch und verwandte Branchenprozesse.
+
+### GG-PE-002 - Zielgruppen
+
+Das Produkt richtet sich an:
+
+- Elektroinstallateure.
+- Anlagenbetreiber und Antragsteller.
+- Projektentwickler fuer PV-, Speicher- und Erzeugungsanlagen.
+- interne Backoffice-Teams von Installationsbetrieben.
+- technische Berater, die Einreichungspakete vorbereiten.
+
+### GG-PE-003 - Betriebsumgebung
+
+Die primaere Betriebsumgebung muss sein:
+
+- lokale Desktop-App auf Linux.
+- Tauri als Desktop-Runtime.
+- lokale Dateiverarbeitung fuer PDF, XLSX und ZIP.
+
+Folgende Sekundaerumgebungen koennen spaeter ergaenzt werden (kein
+MVP-Abnahmegegenstand):
+
+- macOS.
+- Windows.
+- optionaler Browser-Plugin- oder CLI-Betrieb.
+
+### GG-PE-004 - Offline-Faehigkeit
+
+Der MVP soll grundlegende Projektbearbeitung, Checklisten, lokale
+Dokumentanalyse und Export ohne dauerhafte Online-Verbindung ermoeglichen.
+
+Online-Zugriff kann fuer Link-/Versionspruefung, MaStR-nahe Validierungen oder
+optionale LLM-Funktionen verwendet werden, darf aber nicht zwingend fuer die
+lokale Demo-Abnahme sein. Direkte LLM-Anbindungen sind nicht Teil des MVP;
+stattdessen muss der MVP KI-Prompts erzeugen koennen, die Nutzer manuell in
+einem externen KI-System verwenden.
+
+---
+
+## 3. Produktuebersicht
+
+### GG-PUE-001 - Grundfunktion
+
+Das Produkt soll als Tauri-Desktop-App bereitgestellt werden.
+
+Der Kernworkflow lautet:
+
+```text
+Projekt- und Stammdaten erfassen
+↓
+Netzbetreiber, Behoerde oder Register auswaehlen
+↓
+passende Formulare und Pflichtunterlagen ermitteln
+↓
+PDF/XLSX/Dokumente analysieren
+↓
+fehlende Angaben und Nachweise markieren
+↓
+Plausibilitaetscheck ausfuehren
+↓
+Exportpaket als ZIP oder Ordnerstruktur erstellen
+```
+
+Formularvorbefuellung und PDF-/XLSX-Ausgabe sind V1-Funktionen und nicht
+Bestandteil des verbindlichen MVP-Kernworkflows.
+
+### GG-PUE-002 - Hauptmodule
+
+| Kennung    | Modul              | MVP-Umfang                                                                   | V1-Erweiterung                                 |
+| ---------- | ------------------ | ---------------------------------------------------------------------------- | ---------------------------------------------- |
+| GG-MOD-001 | Katalog            | Betreiber-, Behoerden-, Formular- und Quellenprofile                         | weitere Profile gemaess Katalogen              |
+| GG-MOD-002 | Projektverwaltung  | Stammdaten, Anlagen, Speicher, Messkonzept, Nachweise                        | erweiterte Falltypen                           |
+| GG-MOD-003 | Dokumentanalyse    | PDF-/XLSX-Lesen, Feldextraktion, Dokumentklassifikation textbasiert          | OCR fuer eingescannte Dokumente                |
+| GG-MOD-004 | Validierung        | Pflichtfelder, Pflichtunterlagen, Plausibilitaetsregeln                      | profil- und versionsspezifische Regelvarianten |
+| GG-MOD-005 | Formularbefuellung | nicht im MVP                                                                 | Vorbereitung ausfuellbarer PDF-/XLSX-Formulare |
+| GG-MOD-006 | Export             | ZIP-/Ordner-/Checklisten-Export                                              | PDF-/XLSX-Ausgabe vorbefuellter Formulare      |
+| GG-MOD-007 | Quellenmonitoring  | manuell gepflegte Profilversion und Abrufdatum                               | automatisierte Link- und Versionspruefung      |
+| GG-MOD-008 | Tauri UI           | Projektstatus, Review-Ansicht, Korrektur und manuelle Bestaetigung           | Wizard- und Onboarding-Flows                   |
+| GG-MOD-009 | Katalogseed        | Uebernahme kuratierter Startdaten aus `Katalog-pdf.md` und `Katalog-xlsx.md` | maschinenlesbare Profilversionierung           |
+
+---
+
+## 4. MVP-Umfang
+
+Dieses Kapitel ist die Abnahmeklammer fuer den MVP. Jede MVP-Anforderung
+verweist auf eine kanonische FA-Anforderung im Kapitel 5, soweit vorhanden.
+
+### GG-MVP-001 - Lokale Desktop-App
+
+Prioritaet: MVP
+
+Der MVP muss als lokal startbare Tauri-Desktop-App bereitgestellt werden.
+
+Akzeptanz: Die App kann auf einem Entwicklerrechner gestartet werden und zeigt
+eine Projektuebersicht, Profilauswahl und einen Import-/Export-Workflow.
+
+Verweis: GG-ARCH-001, GG-ARCH-002, GG-ARCH-008.
+
+### GG-MVP-002 - Erstes Betreiberprofil
+
+Prioritaet: MVP
+
+Der MVP muss mindestens ein Betreiberprofil aus den Katalogdaten enthalten.
+Der erste MVP-Abnahmestand verwendet `Westnetz` als festes Startprofil
+(siehe GG-DEC-001).
+
+Akzeptanz: Fuer ein ausgewaehltes Profil werden Formularlinks,
+Portalhinweise, Pflichtfelder und Pflichtunterlagen angezeigt.
+
+Verweis: GG-FA-CAT-001, GG-FA-CAT-003.
+
+### GG-MVP-003 - Enger Falltyp
+
+Prioritaet: MVP
+
+Der MVP muss genau einen fachlichen Falltyp als End-to-End-Demo unterstuetzen:
+eine PV-Anlage im Niederspannungsbereich mit installierter Leistung bis
+**30 kWp**, **ohne Speicher** und mit **Ueberschusseinspeisung** fuer das
+Startprofil `Westnetz` (siehe GG-DEC-002).
+
+Akzeptanz: Der Falltyp ist dokumentiert und besitzt eine reproduzierbare
+Demo-Datei oder Demo-Projektvorlage im Repository.
+
+Verweis: GG-DEC-002, GG-DATA-004 (Vokabular `Falltyp`), GG-ACCEPT-001.
+
+### GG-MVP-004 - Checkliste und Pflichtfelder
+
+Prioritaet: MVP
+
+Der MVP muss fuer das erste Profil und den ersten Falltyp eine Checkliste mit
+Pflichtfeldern und Pflichtunterlagen erzeugen.
+
+Akzeptanz: Fehlende Pflichtangaben und fehlende Dokumente werden im UI mit
+Schweregrad (siehe GG-NFA-USE-001) sichtbar markiert.
+
+Verweis: GG-FA-VAL-001, GG-FA-VAL-002, GG-FA-VAL-003.
+
+### GG-MVP-005 - Dokumentimport
+
+Prioritaet: MVP
+
+Der MVP muss lokale PDF- und XLSX-Dateien importieren koennen.
+
+Akzeptanz: Importierte Dateien erscheinen im Projekt, werden einem Dokumenttyp
+zugeordnet und koennen fuer Validierung und Export referenziert werden.
+
+Verweis: GG-FA-DOC-001.
+
+### GG-MVP-006 - Feldextraktion
+
+Prioritaet: MVP
+
+Der MVP muss aus textbasierten PDF-/XLSX-Dokumenten zentrale Felder
+automatisch extrahieren. Reine Manuelleingabe ohne Extraktionsversuch genuegt
+fuer den Demo-Fall nicht.
+
+Akzeptanz:
+
+- Mindestens **Antragsteller, Anlagenbetreiber, Anlagenstandort, installierte
+  Leistung, Anlagenart und Messkonzept** werden im Demo-Fall aus mindestens
+  einem Dokument als Vorschlag extrahiert.
+- Jeder uebernommene Wert traegt Herkunft (Quelldokument, Seite oder Blatt)
+  und Bestaetigungsstatus gemaess GG-DATA-002.
+- Felder, fuer die keine Extraktion gelingt, werden im UI als manuell zu
+  pruefend markiert.
+
+Verweis: GG-FA-DOC-001, GG-DATA-002, GG-FA-PROJ-001.
+
+### GG-MVP-007 - Exportpaket
+
+Prioritaet: MVP
+
+Der MVP muss ein Exportpaket gemaess GG-FA-EXPORT-001 als ZIP oder
+Ordnerstruktur erzeugen koennen.
+
+Akzeptanz: siehe GG-FA-EXPORT-001. Vorbefuellte PDF-/XLSX-Formulare sind fuer
+den MVP nicht erforderlich.
+
+Verweis: GG-FA-EXPORT-001, GG-DEC-003.
+
+### GG-MVP-008 - Keine Portalautomatisierung
+
+Prioritaet: MVP
+
+Der MVP darf keine automatische Einreichung in Netzbetreiberportale enthalten
+oder durchfuehren.
+
+Akzeptanz: Portal-only-Prozesse werden als Vorbereitungshilfe markiert; die
+offizielle Einreichung bleibt Aufgabe des Nutzers.
+
+Verweis: GG-FA-CAT-006, GG-NONGOAL-002, GG-RISK-002.
+
+### GG-MVP-009 - Prompt-Erzeugung
+
+Prioritaet: MVP
+
+Der MVP muss einen strukturierten KI-Prompt gemaess GG-AI-002 erzeugen
+koennen, ohne ein LLM direkt anzubinden.
+
+Akzeptanz: siehe GG-AI-002 und GG-ACCEPT-004.
+
+Verweis: GG-AI-001, GG-AI-002, GG-ACCEPT-004.
+
+---
+
+## 5. Funktionale Anforderungen
+
+### GG-FA-CAT-001 - Katalogprofile
+
+Prioritaet: MVP
+
+Das Produkt muss Profile fuer Betreiber, Behoerden und Register verwalten
+koennen.
+
+MVP-Abgrenzung: Der MVP muss genau ein Netzbetreiberprofil produktiv
+unterstuetzen. Weitere Profiltypen muessen im Datenmodell vorbereitet sein,
+muessen aber nicht fachlich ausgepraegt sein.
+
+Ein Profil muss mindestens enthalten:
+
+- Name.
+- Typ aus dem Vokabular `Profiltyp` (siehe GG-DATA-004).
+- mindestens einen Formularlink (URL plus Anzeigename). Formularlinks
+  koennen optional nach Formularfamilie gemaess GG-FA-CAT-008 gruppiert
+  werden.
+- Portalhinweise (Freitext, kann leer sein, falls keine Portalpflicht
+  besteht).
+- mindestens einen bekannten Falltyp aus dem Vokabular `Falltyp` (siehe
+  GG-DATA-004).
+- Profilversion gemaess GG-DATA-005.
+- Quellkatalog aus dem Vokabular `Quellkatalog` (siehe GG-DATA-004).
+- Zugangsart aus dem Vokabular `Zugangsart` (siehe GG-DATA-004).
+- Nachnutzungsstatus aus dem Vokabular `Nachnutzungsstatus` (siehe
+  GG-DATA-004).
+- Katalogstatus aus dem Vokabular `Katalogstatus` (siehe GG-DATA-004).
+
+### GG-FA-CAT-002 - Priorisierte Profile
+
+Prioritaet: MVP fuer Westnetz; V1 fuer alle weiteren Quellen.
+
+Das Produkt muss das Westnetz-Profil im MVP produktiv unterstuetzen und soll
+die weiteren in der Tabelle gelisteten Profile in V1 unterstuetzen. Die
+Spalte `Abnahme` ist der kanonische Auspraegungsstatus pro Profil.
+
+| Abnahme | Quelle                     |
+| ------- | -------------------------- |
+| MVP     | Westnetz                   |
+| V1      | Bayernwerk                 |
+| V1      | Netze BW                   |
+| V1      | N-ERGIE Netz               |
+| V1      | SWM Infrastruktur          |
+| V1      | 50Hertz                    |
+| V1      | Amprion                    |
+| V1      | TransnetBW                 |
+| V1      | TenneT Germany             |
+| V1      | Bundesnetzagentur          |
+| V1      | Marktstammdatenregister    |
+| V1      | Landesfinanzverwaltungen   |
+| V1      | BDEW                       |
+| V1      | netztransparenz.de         |
+| V1      | 4-UE-NB-Reifegradverfahren |
+
+### GG-FA-CAT-003 - Katalogbasierte Startprofile
+
+Prioritaet: MVP
+
+Das Produkt muss die Informationen aus `Katalog-pdf.md` und
+`Katalog-xlsx.md` als initiale Seed-Datenquelle modellieren koennen.
+
+Akzeptanz: Mindestens die im MVP ausgewaehlte Quelle wird aus einem
+maschinenlesbaren Profil abgebildet, das auf die Katalogfundstelle
+zurueckverweist.
+
+### GG-FA-CAT-004 - PDF-Katalogprofile
+
+Prioritaet: V1
+
+Das Produkt soll die im PDF-Katalog priorisierten Quellen als Profile
+unterstuetzen. Die Spalte `Reihenfolge` beschreibt die V1-interne
+Umsetzungsreihenfolge und ist unabhaengig vom MVP/V1-Prioritaetsschema dieses
+Dokuments (siehe GG-LESE-001).
+
+| Reihenfolge | Quelle                    | Kataloghinweis                                                    | Typischer Zugang              |
+| ----------- | ------------------------- | ----------------------------------------------------------------- | ----------------------------- |
+| 1           | Bayernwerk                | Speicher, Verguetung, Messkonzepte, MS/HS                         | Portal + PDF                  |
+| 2           | Westnetz                  | E.1/E.8/E.11, TAB-/VDE-Formulare, Abrechnung                      | PDF + Portal                  |
+| 3           | Netze BW                  | PV ab 135 kW, Messkonzept, technische Aenderungen                 | PDF + Kundenportal            |
+| 4           | N-ERGIE Netz              | E.2/E.3/E.8, Einspeiseart, Veraeusserungsform, Steckersolar       | PDF + Online-Service          |
+| 5           | SWM Infrastruktur         | Erzeugungsanlagen, Inbetriebsetzung, Steuer-/Verguetungsformulare | PDF + Portale                 |
+| 6           | 50Hertz                   | Reifegradverfahren, Netzanschlussdokumente, 4-UE-NB-Formulare     | PDF + XLSX + HTML             |
+| 7           | Amprion                   | Onshore-EE-Prozess, Checkliste, NDA, Zeitplan, Vertragsmuster     | PDF + HTML                    |
+| 8           | TransnetBW                | Reifegrad-PDFs, BESS-Mustervertrag, TAB HoeS                      | PDF + XLSX + HTML             |
+| 9           | TenneT Germany            | KraftNAV, Netzanschlussregeln, weniger oeffentliche Formulare     | PDF + gemeinsame 4-UE-NB-Doku |
+| 10          | Bundesnetzagentur / MaStR | Registrierungshilfen, Ausschreibungs- und Zahlungsformulare       | PDF + Online-Register         |
+| 11          | BDEW                      | Redispatch, Ausfallarbeit, Branchenprozesse                       | PDF + Fachseiten              |
+| 12          | Landesfinanzverwaltungen  | Bayern/NRW mit PV-PDFs, sonst ELSTER-/Formularindex               | PDF + ELSTER                  |
+
+### GG-FA-CAT-005 - XLSX-Katalogprofile
+
+Prioritaet: V1
+
+Das Produkt soll die im XLSX-Katalog identifizierten strukturierten Downloads
+als eigene Formular- oder Hilfsdatei-Arten modellieren.
+
+Wichtige XLSX-Gruppen:
+
+- Reifegradverfahren F.1/F.6 bei 50Hertz, Amprion und TransnetBW.
+- Bayernwerk und Westnetz fuer Redispatch, Marktlokationen, Kundenanlagen und
+  Marktkommunikation.
+- TransnetBW fuer Bilanzierungsgebiete und Lastreduktionsdaten.
+- netztransparenz.de und BDEW fuer EEG-/Redispatch-Sonderfaelle und
+  Umsetzungshilfen.
+- MaStR-Hilfsdateien als Hilfsdaten, nicht als Einreichungsformular.
+
+Akzeptanz: XLSX-Quellen werden nicht pauschal als klassische Antragsformulare
+behandelt, sondern nach Zweck als Formular, Hilfsdatei, Stammdatendatei,
+Redispatch-Datei oder Branchenhilfe klassifiziert.
+
+### GG-FA-CAT-006 - Portal-only- und Nicht-PDF-/Nicht-XLSX-Markierung
+
+Prioritaet: MVP
+
+Das Produkt muss markieren koennen, wenn ein Prozess im Katalog als
+portalgefuehrt, online-only, ELSTER-first oder nicht oeffentlich verifizierbar
+beschrieben ist.
+
+Beispiele:
+
+- kleine PV-Faelle bei mehreren VNB laufen haeufig portalgefuehrt.
+- MaStR ist online-only; PDF-Dokumente sind Registrierungshilfen.
+- Landesfinanzverwaltungen verweisen haeufig auf ELSTER.
+- TenneT-XLSX fuer F.1/F.6 war im Katalog nicht oeffentlich verifiziert.
+
+Akzeptanz: GridGuide zeigt fuer solche Faelle eine Vorbereitungshilfe und
+ersetzt dabei nicht den offiziellen Einreichungsweg.
+
+### GG-FA-CAT-007 - Lizenz- und Nachnutzungsstatus durchsetzen
+
+Prioritaet: MVP
+
+Zusaetzlich zur Speicherung gemaess GG-FA-CAT-001 muss das Produkt den
+Nachnutzungsstatus pro Quelle in der UI und im Exportpaket sichtbar
+durchsetzen.
+
+Akzeptanz: Quellen ohne offene Lizenz werden im Profil und im Exportpaket als
+"nur verlinken / nicht neu verteilen" markiert. Originalformulare ohne offene
+Lizenz werden nicht in das Exportpaket kopiert (siehe GG-NONGOAL-004).
+
+### GG-FA-CAT-008 - Formularfamilien aus den Katalogen
+
+Prioritaet: V1
+
+Das Produkt soll die Katalogfundstellen mindestens folgenden Formularfamilien
+zuordnen koennen:
+
+- Anmeldung und Netzanschluss.
+- Inbetriebsetzung und technische Nachweise.
+- Messkonzept, Zaehlung und Marktlokation.
+- Verguetung, Einspeiseabrechnung und Betreiberwechsel.
+- Steuernahe Angaben und Landesfinanzverwaltung.
+- Reifegradverfahren F.1-F.6.
+- Redispatch, Ausfallarbeit und Lastreduktion.
+- MaStR- und Bundesnetzagentur-Hilfen.
+
+### GG-FA-PROJ-001 - Projektanlage
+
+Prioritaet: MVP
+
+Das Produkt muss ein Projekt mit Stammdaten anlegen und bearbeiten koennen.
+
+Mindestens zu erfassen sind:
+
+- Antragsteller.
+- Anlagenbetreiber.
+- Anlagenstandort.
+- Anlagenart aus dem Vokabular `Anlagenart` (siehe GG-DATA-004). Das
+  Vorhandensein eines Speichers wird ausschliesslich ueber `Anlagenart`
+  ausgedrueckt (z. B. `PVmitSpeicher` oder `Speicher`); eine separate
+  Speicher-Flag wird nicht gefuehrt.
+- installierte Leistung in kWp.
+- Messkonzept (optionales Feld; verpflichtend, sobald der Falltyp ein
+  Messkonzept verlangt, siehe GG-FA-VAL-003).
+- Netzbetreiberprofil.
+- Falltyp aus dem Vokabular `Falltyp` (siehe GG-DATA-004).
+
+### GG-FA-PROJ-002 - Lokale Projektpersistenz
+
+Prioritaet: MVP
+
+Das Produkt muss Projekte lokal speichern und erneut laden koennen.
+
+Akzeptanz: Ein Demo-Projekt kann geschlossen, erneut geoeffnet und danach mit
+denselben Stammdaten, Dokumentreferenzen, Warnungen und Bestaetigungsstatus
+weiterbearbeitet werden.
+
+### GG-FA-DOC-001 - Dokumentzuordnung
+
+Prioritaet: MVP
+
+Das Produkt muss importierte Dokumente einem fachlichen Dokumenttyp aus dem
+Vokabular `Dokumenttyp` zuordnen koennen (siehe GG-DATA-004).
+
+Akzeptanz: Jedes importierte Dokument hat genau einen Dokumenttyp, einen
+Bestaetigungsstatus (vorgeschlagen oder bestaetigt) und ist im Projekt
+referenzierbar. Unklassifizierbare Dokumente werden auf `Unbekannt` gesetzt.
+
+### GG-FA-VAL-001 - Pflichtfeldpruefung
+
+Prioritaet: MVP
+
+Das Produkt muss Pflichtfelder je Profil und Falltyp pruefen.
+
+Akzeptanz: Fehlende Pflichtfelder erzeugen Warnungen mit betroffener Quelle,
+Feldname, Schweregrad (siehe GG-NFA-USE-001) und Korrekturhinweis.
+
+### GG-FA-VAL-002 - Pflichtunterlagenpruefung
+
+Prioritaet: MVP
+
+Das Produkt muss Pflichtunterlagen je Profil und Falltyp pruefen.
+
+Akzeptanz: Fehlende Pflichtunterlagen werden in der Checkliste mit
+Schweregrad als offen markiert.
+
+### GG-FA-VAL-003 - Plausibilitaetsregeln
+
+Prioritaet: MVP
+
+Das Produkt muss regelbasierte Plausibilitaetspruefungen unterstuetzen.
+
+MVP-Mindestmenge: Fuer den Demo-Falltyp `PV_NS_OhneSpeicher` (siehe
+GG-DEC-002) muessen mindestens **fuenf** Plausibilitaetsregeln aktiv sein,
+die mindestens die folgenden Themen abdecken:
+
+- Anlagenleistung fehlt oder widerspricht Formularangaben.
+- Anlagenart und vorhandene Nachweise sind inkonsistent (z. B. Anlagenart
+  `PVmitSpeicher`, aber kein Speichernachweis).
+- Messkonzept ist fuer den Falltyp erforderlich, aber nicht zugeordnet.
+- Zaehlerspezifische Angaben fehlen.
+- Betreiber- und Antragstellerdaten sind unvollstaendig.
+
+Weitere Regeln koennen ergaenzt werden; jede Regel muss gemaess GG-AI-003
+deterministisch sein und gemaess GG-NFA-USE-001 nachvollziehbar warnen.
+
+### GG-FA-FILL-001 - Formularvorbefuellung
+
+Prioritaet: V1
+
+Das Produkt soll aus Projektstammdaten und extrahierten Werten PDF- oder
+XLSX-Formulare vorbefuellen koennen.
+
+Akzeptanz: Der Nutzer kann vor dem Export alle automatisch gesetzten Werte
+pruefen und manuell korrigieren.
+
+### GG-FA-EXPORT-001 - Exportpaket
+
+Prioritaet: MVP
+
+Das Produkt muss ein Einreichungspaket als ZIP oder Ordnerstruktur exportieren
+koennen.
+
+Das Paket muss mindestens enthalten:
+
+- Checkliste mit Schweregradangabe je offenem Punkt.
+- Projektstammdaten gemaess GG-FA-PROJ-001.
+- Warnungen und offene Punkte gemaess GG-FA-VAL-001 bis GG-FA-VAL-003.
+- referenzierte nutzereigene Dokumente.
+- Links auf offizielle Quellen anstelle kopierter Originalformulare ohne
+  offene Lizenz (siehe GG-FA-CAT-007 und GG-NONGOAL-004).
+- Quellen- und Profilversion gemaess GG-DATA-005.
+
+Das Paket darf keine Inhalte gemaess GG-DATA-003 enthalten.
+
+### GG-FA-SRC-001 - Quellenstatus
+
+Prioritaet: V1
+
+Das Produkt soll Quellen mit Abrufdatum, Linkstatus und Version verwalten.
+
+Akzeptanz: Jede Regel und jeder Formularmapper kann auf Quelle und
+Profilversion zurueckgefuehrt werden.
+
+---
+
+## 6. Nicht-Ziele und Scope-Grenzen
+
+### GG-NONGOAL-001 - Keine verbindliche Beratung
+
+Das Produkt ist keine Rechts-, Steuer- oder Netzanschlussberatung.
+
+### GG-NONGOAL-002 - Kein Ersatz fuer Betreiberportale
+
+Das Produkt ersetzt keine Netzbetreiber-, Behoerden- oder Registerportale.
+
+### GG-NONGOAL-003 - Keine Garantie auf Annahme
+
+Das Produkt garantiert nicht, dass ein Netzbetreiber oder eine Behoerde ein
+Einreichungspaket annimmt.
+
+### GG-NONGOAL-004 - Keine Neuverteilung geschuetzter Formulare
+
+Originalformulare ohne offene Nachnutzungslizenz duerfen nicht als
+Projektbestandteil neu verteilt werden. Das Produkt soll solche Formulare
+verlinken, beschreiben und feldseitig modellieren.
+
+Nutzereigene Uploads duerfen im Exportpaket referenziert oder kopiert werden,
+wenn sie aus dem lokalen Projektbestand des Nutzers stammen.
+
+### GG-NONGOAL-005 - Keine verpflichtende Cloud
+
+Der MVP darf keine Cloud-Plattform als zwingende Laufzeitumgebung voraussetzen.
+
+---
+
+## 7. Architektur
+
+### GG-ARCH-001 - Tauri Desktop-App
+
+Prioritaet: MVP
+
+Das Produkt muss als Tauri-basierte Desktop-App konzipiert werden.
+
+Akzeptanz: UI, Tauri-Commands und fachlicher Kern sind getrennt dokumentiert.
+
+### GG-ARCH-002 - Hexagonale Architektur
+
+Prioritaet: MVP
+
+Das Produkt muss eine hexagonale Architektur verwenden.
+
+Akzeptanz: Fachlicher Kern, Ports und Adapter sind im Repository strukturell
+getrennt.
+
+Zielstruktur:
+
+```text
+src-tauri/
+└─ src/
+   ├─ main.rs
+   ├─ hexagon/
+   │  ├─ core/
+   │  └─ ports/
+   │     ├─ driving/
+   │     └─ driven/
+   └─ adapters/
+      ├─ driving/
+      └─ driven/
+```
+
+### GG-ARCH-003 - Core-Isolation
+
+Prioritaet: MVP
+
+`hexagon/core` darf nicht direkt von Tauri, PDF-, XLSX-, OCR-, HTTP- oder
+LLM-Bibliotheken abhaengen.
+
+Akzeptanz: Ein Architekturtest oder statischer Importcheck weist nach, dass
+`hexagon/core` keine Adapterpakete importiert.
+
+### GG-ARCH-004 - Driving Adapter
+
+Prioritaet: MVP
+
+Tauri-Commands muessen als Adapter unter `adapters/driving` behandelt werden.
+
+Akzeptanz: Tauri-Commands enthalten keine Plausibilitaetsregeln und rufen
+Use-Cases ueber driving ports auf.
+
+### GG-ARCH-005 - Kern zuerst moeglich
+
+Prioritaet: MVP
+
+Ein technischer Kern- oder CLI-Prototyp darf vor der vollstaendigen Tauri-UI
+entstehen. Die MVP-Abnahme der Produktanwendung erfordert dennoch eine lokal
+startbare Tauri-App gemaess GG-MVP-001 und GG-ARCH-001.
+
+Akzeptanz: Der fachliche Kern ist ohne Tauri testbar; die MVP-Demo zeigt den
+Kern ueber die Tauri-App.
+
+### GG-ARCH-006 - Driven Adapter
+
+Prioritaet: MVP
+
+Alle implementierten PDF-, XLSX-, OCR-, Dateisystem-, Datenbank-, HTTP- und
+LLM-Implementierungen muessen als driven adapter angebunden werden.
+
+Akzeptanz: Externe Implementierungen werden ueber Ports aus
+`hexagon/ports/driven` angesprochen.
+
+### GG-ARCH-007 - Bounded Contexts
+
+Prioritaet: MVP
+
+Der fachliche Kern soll mindestens folgende Bounded Contexts unterscheiden:
+
+- `Catalog`.
+- `Project`.
+- `Validation`.
+- `Submission`.
+
+Spaetere Contexts koennen `OcrExtraction`, `Mastr`, `Redispatch` und
+`PortalAutomation` sein.
+
+### GG-ARCH-008 - Technologie-Stack
+
+Prioritaet: MVP
+
+Das Produkt muss folgenden Technologie-Stack verwenden:
+
+- Backend des `src-tauri/`-Teils in **Rust** (aktuelle stabile Edition).
+- **Tauri 2.x** als Desktop-Runtime; die jeweils aktuelle Minor-Version wird
+  verwendet, Mindestversion zum Zeitpunkt dieser Lastenheft-Fassung ist
+  Tauri 2.11.
+- Frontend-Framework: **SvelteKit 2.x** im Single-Page-Modus; Mindestversion
+  zum Zeitpunkt dieser Lastenheft-Fassung ist SvelteKit 2.60. Abweichungen
+  sind als Architekturentscheid zu dokumentieren (siehe GG-DEC-004).
+- Paketierung als Tauri-Bundle fuer Linux (AppImage und .deb).
+- Persistenz im MVP als lokale Dateien im Nutzerprofil; eine eingebettete
+  Datenbank (z. B. SQLite) ist V1.
+
+Konkrete Patch- und Minor-Versionsfestlegungen erfolgen in den Manifesten
+(`Cargo.toml`, `package.json`) und nicht hier; das Lastenheft schreibt nur
+die Major-Linie vor.
+
+Akzeptanz: Stack-Entscheidungen sind im Repository als ADR oder in
+`docs/architecture.md` dokumentiert; Abweichungen sind begruendet.
+
+---
+
+## 8. Datenanforderungen
+
+### GG-DATA-001 - Gemeinsames Datenmodell
+
+Prioritaet: MVP
+
+Das Produkt muss ein gemeinsames Datenmodell fuer wiederkehrende
+Formularfelder bereitstellen.
+
+Mindestens erforderlich sind:
+
+- `applicant`.
+- `operator`.
+- `site`.
+- `asset`.
+- `metering`.
+- `grid_profile`.
+- `evidence`.
+- `submission_package`.
+
+### GG-DATA-002 - Herkunft und Konfidenz
+
+Prioritaet: MVP
+
+Automatisch extrahierte oder vorgeschlagene Werte muessen Herkunft und Status
+speichern.
+
+Pflichtfelder pro Wert:
+
+- `source_document`: Pfad oder ID des Quelldokuments.
+- `source_location`: Seite (PDF) oder Blatt/Zelle (XLSX), soweit verfuegbar.
+- `extraction_method`: einer aus `{manual, parser, ocr, llm, prompt_response}`.
+- `status`: einer aus `{extracted, suggested, confirmed, rejected}`.
+- `confidence`: Gleitkommawert in `[0.0, 1.0]` oder `null`, wenn nicht
+  ermittelbar.
+- `confirmed_by_user`: `true` oder `false`.
+
+Akzeptanz: Werte mit `status = confirmed` haben `confirmed_by_user = true`.
+Werte mit `extraction_method = manual` muessen `confidence = null` setzen.
+
+### GG-DATA-003 - Secrets ausserhalb von Projektdaten
+
+Prioritaet: MVP
+
+Das Produkt darf keine API-Schluessel, Portalpasswoerter oder sonstige Secrets
+in Projektdateien oder Exportpakete schreiben.
+
+Soweit Secrets fuer optionale LLM- oder Online-Funktionen benoetigt werden,
+muessen sie ueber den Secret-Store des Betriebssystems (z. B. Secret Service
+unter Linux) verwaltet werden.
+
+Akzeptanz: Ein Export eines Demo-Projekts mit konfiguriertem LLM-Adapter
+enthaelt keinen API-Schluessel; die Projektdatei enthaelt keinen Klartext-
+Secret.
+
+### GG-DATA-004 - Kontrollierte Vokabulare
+
+Prioritaet: MVP
+
+Das Produkt muss folgende kontrollierte Vokabulare als Enumerationen
+bereitstellen. Erweiterungen sind als V1-Aenderung moeglich.
+
+`Profiltyp`:
+
+- `Netzbetreiber`.
+- `Uebertragungsnetzbetreiber`.
+- `Behoerde`.
+- `Register`.
+- `Branchenquelle`.
+
+`Quellkatalog`:
+
+- `PDF`.
+- `XLSX`.
+- `Beide`.
+
+`Zugangsart`:
+
+- `PDF`.
+- `XLSX`.
+- `Portal`.
+- `HTML`.
+- `OnlineRegister`.
+- `ELSTER`.
+
+`Nachnutzungsstatus`:
+
+- `OffeneLizenz`.
+- `KeineOffeneLizenzErsichtlich`.
+- `Unbekannt`.
+- `NurVerlinken`.
+
+`Katalogstatus`:
+
+- `SehrGutErschlossen`.
+- `GutErschlossen`.
+- `TeilweiseErschlossen`.
+- `NichtVerifiziert`.
+
+`Anlagenart`:
+
+- `PV`.
+- `PVmitSpeicher`.
+- `Speicher`.
+- `BHKW`.
+- `Wind`.
+- `Sonstige`.
+
+`Falltyp` (MVP-Minimalmenge, V1-Erweiterungen moeglich):
+
+- `Steckersolar`.
+- `PV_NS_OhneSpeicher` (MVP-Demo, siehe GG-DEC-002).
+- `PV_NS_MitSpeicher`.
+- `PV_Ab135kW`.
+- `Redispatch`.
+- `Betreiberwechsel`.
+
+`Dokumenttyp`:
+
+- `Formular`.
+- `Zertifikat`.
+- `Datenblatt`.
+- `Lageplan`.
+- `Messkonzept`.
+- `Inbetriebsetzungsprotokoll`.
+- `Betreiberwechselformular`.
+- `Steuerformular`.
+- `Unbekannt`.
+
+### GG-DATA-005 - Profilversionierung
+
+Prioritaet: MVP
+
+Das Produkt muss pro Profil und Regelsatz eine `Profilversion` fuehren.
+
+Pflichtfelder pro Profilversion:
+
+- `version_id`: kalender- oder semver-basierter Bezeichner (Empfehlung:
+  `YYYY-MM-DD` oder `MAJOR.MINOR`).
+- `retrieved_at`: ISO-Datum des letzten Quellenabrufs.
+- `source_url`: URL der Katalog- oder Originalquelle.
+- `notes`: optionaler Freitext.
+
+Akzeptanz: Jede Warnung und jeder Eintrag im Exportpaket laesst sich auf eine
+konkrete `Profilversion` zurueckfuehren.
+
+---
+
+## 9. KI-, OCR- und Regelanforderungen
+
+### GG-AI-001 - KI als Vorschlagssystem
+
+Prioritaet: MVP
+
+KI-Ergebnisse muessen als Vorschlaege gekennzeichnet werden. Das gilt sowohl
+fuer direkte LLM-Adapter, soweit vorhanden, als auch fuer Ergebnisse, die
+Nutzer aus einem generierten Prompt manuell zurueckuebernehmen.
+
+Akzeptanz: Kein KI-extrahierter Wert und kein Prompt-Ruecklauf wird ohne
+manuelle Bestaetigung als finaler Exportwert verwendet.
+
+### GG-AI-002 - Prompt-Erzeugung statt direkter KI-Anbindung
+
+Prioritaet: MVP
+
+Das Produkt muss eine KI-Betriebsart unterstuetzen, bei der kein LLM direkt
+angebunden wird, sondern ein strukturierter Prompt erzeugt wird.
+
+Der Prompt muss mindestens enthalten:
+
+- Ziel der Analyse.
+- relevante Projektdaten.
+- relevante Formular- und Profilinformationen inklusive `Profilversion`.
+- extrahierte Textausschnitte oder Feldlisten.
+- klare Ausgabeanforderung fuer fehlende Felder, offene Unterlagen und
+  Plausibilitaetswarnungen.
+- Hinweis, keine Rechts-, Steuer- oder Netzanschlussberatung zu leisten.
+- Anforderung an ein strukturiertes Antwortformat.
+
+Das Antwortformat muss fuer die Rueckuebernahme geeignet sein. Fuer den MVP
+ist mindestens eines der folgenden Formate zulaessig:
+
+- JSON mit festen Schluesseln `missing_fields`, `missing_documents`,
+  `plausibility_warnings`, `suggested_values`, `questions`.
+- Markdown mit festen Abschnitten fuer fehlende Felder, fehlende Unterlagen,
+  Plausibilitaetswarnungen, vorgeschlagene Werte und Rueckfragen.
+
+Akzeptanz:
+
+- Der Nutzer kann einen Prompt aus den aktuellen Projektdaten erzeugen und
+  in die Zwischenablage kopieren.
+- Vor dem Kopieren ist sichtbar, welche Projekt-, Dokument- und
+  Profilinhalte im Prompt enthalten sind.
+- Die Anwendung muss eine Eingabefunktion (z. B. ein Textfeld oder ein
+  Datei-Import) bereitstellen, in die der Nutzer eine strukturierte Antwort
+  im erwarteten Format (JSON oder Markdown gemaess Spezifikation oben)
+  einfuegen kann. Aus dieser Antwort werden Feldvorschlaege gemaess
+  GG-DATA-002 als `extraction_method = prompt_response` und
+  `status = suggested` in das Projekt uebernommen; eine direkte
+  LLM-Anbindung ist hierfuer nicht zulaessig.
+- Nicht strukturierte Antworten duerfen angezeigt, aber nicht automatisch
+  als Feldvorschlaege uebernommen werden.
+- Kein Wert aus einem Prompt-Ruecklauf darf ohne Bestaetigung gemaess
+  GG-AI-001 final werden.
+- Ein Beispiel-Prompt und eine Beispiel-Antwort liegen als Abnahmeartefakt
+  gemaess GG-ACCEPT-004 im Repository.
+
+### GG-AI-003 - Deterministische Regeln
+
+Prioritaet: MVP
+
+Pflichtfeld-, Pflichtunterlagen- und Plausibilitaetspruefungen muessen als
+deterministische Regeln modelliert werden.
+
+Akzeptanz: Dieselben Projektdaten und dieselbe Profilversion erzeugen
+dieselben Warnungen.
+
+### GG-AI-004 - Direkte LLM-Anbindung optional
+
+Prioritaet: V1
+
+Das Produkt kann direkte LLM-Adapter unterstuetzen.
+
+Akzeptanz: Direkte LLM-Adapter sind optional, konfigurierbar und senden Daten
+nur nach expliziter Nutzerentscheidung an externe Dienste (siehe
+GG-NFA-SEC-002).
+
+### GG-AI-005 - OCR optional im MVP
+
+Prioritaet: V1
+
+OCR soll fuer eingescannte Dokumente unterstuetzt werden.
+
+MVP-Abgrenzung: Der MVP kann mit textbasierten PDF-/XLSX-Dokumenten arbeiten.
+
+---
+
+## 10. Nichtfunktionale Anforderungen
+
+### GG-NFA-SEC-001 - Lokale Verarbeitung
+
+Prioritaet: MVP
+
+Projekt- und Dokumentdaten muessen standardmaessig lokal verarbeitet werden.
+
+Externe Dienste duerfen nur nach expliziter Nutzerentscheidung verwendet
+werden.
+
+### GG-NFA-SEC-002 - Datenschutz und Einwilligung
+
+Prioritaet: MVP
+
+Die Anwendung muss deutlich machen, welche Daten lokal verarbeitet werden und
+welche Daten optional an externe Dienste gesendet werden.
+
+Die Einwilligung muss pro externem Dienst (z. B. ein konkreter LLM-Anbieter,
+ein konkreter Online-Pruefdienst) erfasst werden und folgende
+Auswahlmoeglichkeiten bieten:
+
+- einmalig erlauben.
+- fuer diese Session erlauben.
+- dauerhaft erlauben.
+- ablehnen.
+
+Bei der Prompt-Erzeugung muss vor dem Kopieren sichtbar sein, welche Inhalte
+in den Prompt aufgenommen werden.
+
+### GG-NFA-USE-001 - Nachvollziehbare Warnungen
+
+Prioritaet: MVP
+
+Jede Warnung muss fuer Nutzer verstaendlich sein.
+
+Eine Warnung muss enthalten:
+
+- Schweregrad aus `{info, warnung, fehler}`.
+- betroffener Bereich.
+- Ursache.
+- empfohlene Korrektur.
+- Quelle oder Regel, soweit vorhanden.
+
+Akzeptanz: UI und Exportpaket gruppieren Warnungen nach Schweregrad. Solange
+mindestens ein Punkt mit Schweregrad `fehler` offen ist, ist der Export
+standardmaessig gesperrt. Der Nutzer kann den Export ueber eine explizite,
+protokollierte Override-Bestaetigung dennoch erzeugen; das Exportpaket
+markiert in diesem Fall alle Override-Fehler sichtbar.
+
+### GG-NFA-MAINT-001 - Erweiterbarkeit
+
+Prioritaet: MVP
+
+Neue Betreiberprofile, Formularversionen und Regeln muessen ohne Aenderung
+der UI-Grundstruktur und ohne Aenderung am Code in `hexagon/core` ergaenzt
+werden koennen. Profile und Regeln werden datengetrieben (z. B. als Datei im
+Repository oder im Nutzerprofil) erweitert.
+
+Akzeptanz: Das Hinzufuegen eines weiteren Betreiberprofils erfordert keine
+Aenderung am UI-Layout oder am fachlichen Kern.
+
+### GG-NFA-TEST-001 - Testbarkeit
+
+Prioritaet: MVP
+
+Validierungsregeln und Formularmapper muessen ohne Tauri-UI testbar sein.
+
+### GG-NFA-PERF-001 - Antwortzeiten
+
+Prioritaet: MVP
+
+Auf einem Referenzsystem (4 Cores, 8 GB RAM, SSD) muessen folgende
+Antwortzeiten eingehalten werden:
+
+- Projekt oeffnen aus lokalem Bestand: <= 2 s.
+- Import und Klassifikation eines textbasierten PDF bis 5 MB: <= 10 s.
+- Import und Klassifikation eines textbasierten PDF bis 50 MB: <= 60 s.
+- Import und Klassifikation eines textbasierten XLSX bis 20 MB: <= 30 s.
+- Validierungslauf fuer das MVP-Demo-Projekt gemaess GG-ACCEPT-001: <= 3 s.
+- Exportpaket fuer das MVP-Demo-Projekt erzeugen: <= 5 s.
+
+Akzeptanz: Ein reproduzierbarer Benchmark oder ein Messprotokoll liegt im
+Repository.
+
+### GG-NFA-PERF-002 - Dateigrenzen
+
+Prioritaet: MVP
+
+Das Produkt muss PDF-Dateien bis **50 MB** und XLSX-Dateien bis **20 MB**
+verarbeiten koennen. Groessere Dateien duerfen abgelehnt werden, muessen aber
+mit einer verstaendlichen Fehlermeldung gemaess GG-NFA-USE-001 reagieren.
+
+### GG-NFA-INSTALL-001 - Distribution
+
+Prioritaet: V1
+
+Das Produkt soll als signiertes Tauri-Bundle fuer Linux (AppImage und .deb)
+verteilt werden. MVP-Builds duerfen unsigniert sein, muessen aber
+reproduzierbar sein.
+
+Reproduzierbarkeit bedeutet in diesem Lastenheft:
+
+- Rust-Abhaengigkeiten werden ueber `Cargo.lock` und `cargo build --locked`
+  fixiert.
+- Frontend-Abhaengigkeiten werden ueber ein eingechecktes Lockfile
+  (z. B. `pnpm-lock.yaml` oder `package-lock.json`) fixiert.
+- Der dokumentierte Build-Befehl benoetigt keine externen Secrets und
+  erzeugt fuer denselben Quellstand auf demselben Referenzsystem dieselben
+  Bundle-Inhalte bis auf bekannte nicht-deterministische Anteile
+  (Zeitstempel, Signatur).
+
+Akzeptanz: Ein Build-Befehl im Repository erzeugt ein Bundle ohne externe
+Geheimnisse; zwei aufeinanderfolgende Builds auf demselben Referenzsystem
+unterscheiden sich nur in den dokumentierten nicht-deterministischen
+Anteilen.
+
+### GG-NFA-INSTALL-002 - Updates
+
+Prioritaet: V1
+
+Das Produkt soll einen optionalen Update-Mechanismus haben. Updates duerfen
+nur nach Nutzerbestaetigung heruntergeladen werden (siehe GG-NFA-SEC-002).
+
+### GG-NFA-LOG-001 - Lokales Logging
+
+Prioritaet: MVP
+
+Das Produkt muss ein lokales Anwendungsprotokoll fuehren. Das Protokoll darf
+keine personenbezogenen Projektdaten, keine Klartext-Secrets und keine
+Inhalte aus importierten Dokumenten enthalten.
+
+Das Logverzeichnis folgt der XDG Base Directory Specification:
+
+- Linux: `$XDG_STATE_HOME/gridguide/` (Fallback `~/.local/state/gridguide/`).
+- macOS und Windows (sekundaer, siehe GG-PE-003): plattformuebliches
+  State-/AppData-Verzeichnis, dokumentiert je Plattform.
+
+Akzeptanz: Der konkrete Pfad ist in `docs/architecture.md` oder in einer
+ADR dokumentiert; ein Demo-Log enthaelt nur Ereignisse (z. B. "Projekt
+geoeffnet"), keine Inhalte.
+
+### GG-NFA-LOG-002 - Keine Telemetrie ohne Einwilligung
+
+Prioritaet: MVP
+
+Das Produkt darf ohne explizite Nutzerentscheidung gemaess GG-NFA-SEC-002
+keine Telemetrie, Crash-Reports oder Nutzungsdaten an externe Dienste senden.
+
+### GG-NFA-BACKUP-001 - Sicherung lokaler Projekte
+
+Prioritaet: MVP
+
+Das Produkt muss Projektdateien atomar speichern (Schreiben in eine
+temporaere Datei, danach Rename), sodass ein Programmabbruch keine teilweise
+geschriebene Projektdatei hinterlaesst.
+
+### GG-NFA-BACKUP-002 - Export als Backup
+
+Prioritaet: V1
+
+Das Produkt soll eine "Projektsicherung exportieren"-Funktion anbieten, die
+Projektdaten und referenzierte Dokumente in ein einzelnes Archiv buendelt.
+
+### GG-NFA-I18N-001 - Sprache
+
+Prioritaet: MVP
+
+Die MVP-UI muss in deutscher Sprache verfuegbar sein. Weitere Sprachen sind
+V1.
+
+Akzeptanz: Alle MVP-relevanten UI-Texte sind in einer zentralen Ressource
+gepflegt; Hartkodierungen in Komponenten werden in Tests oder per Linting
+verhindert.
+
+### GG-NFA-A11Y-001 - Basis-Barrierefreiheit
+
+Prioritaet: V1
+
+Das Produkt soll WCAG 2.1 AA fuer Kontraste, Tastaturbedienung und
+Bildschirmleser-Beschriftung der Hauptansichten erreichen.
+
+MVP-Mindestanforderung: Alle MVP-Hauptansichten muessen per Tastatur bedient
+werden koennen.
+
+Akzeptanz: Ein dokumentiertes manuelles Testprotokoll je MVP-Hauptansicht
+weist die vollstaendige Tastaturbedienbarkeit nach (Fokusreihenfolge,
+Aktivierung primaerer Aktionen, Schliessen modaler Dialoge). Das Protokoll
+liegt im Repository und wird mit jeder MVP-Abnahme erneuert.
+
+---
+
+## 11. Lizenz und Veroeffentlichung
+
+### GG-LIC-001 - Open Source
+
+Prioritaet: MVP
+
+GridGuide muss unter einer OSI-anerkannten Open-Source-Lizenz veroeffentlicht
+werden. Bevorzugte Lizenz ist **Apache-2.0** (siehe GG-DEC-005).
+
+Akzeptanz: Eine `LICENSE`-Datei mit dem gewaehlten Lizenztext liegt im
+Repository.
+
+### GG-LIC-002 - Drittquellen
+
+Prioritaet: MVP
+
+Drittquellen (Katalogdaten, Formularreferenzen) muessen mit Nennung des
+Nachnutzungsstatus gemaess GG-DATA-004 dokumentiert sein. Quellen ohne offene
+Lizenz duerfen nur verlinkt, nicht neu verteilt werden (siehe
+GG-NONGOAL-004 und GG-FA-CAT-007).
+
+---
+
+## 12. Abnahmeartefakte
+
+### GG-ACCEPT-001 - Demo-Projekt
+
+Prioritaet: MVP
+
+Das Repository muss ein Demo-Projekt fuer den ersten Betreiber und Falltyp
+enthalten.
+
+### GG-ACCEPT-002 - Beispiel-Export
+
+Prioritaet: MVP
+
+Das Repository muss ein Beispiel-Exportpaket oder einen reproduzierbaren
+Exporttest enthalten.
+
+### GG-ACCEPT-003 - Requirements-Matrix
+
+Prioritaet: MVP
+
+Das Repository muss eine minimale Requirements-Matrix enthalten, die
+MVP-Anforderungen, Status und Test-/Demo-Artefakte verknuepft.
+
+Der Status eines Eintrags wird aus dem Vokabular `RequirementStatus`
+gewaehlt:
+
+- `geplant`: Anforderung ist bekannt, Umsetzung noch nicht begonnen.
+- `in_arbeit`: Umsetzung laeuft, kein Nachweis verfuegbar.
+- `umgesetzt`: Umsetzung abgeschlossen, Nachweis verfuegbar, Abnahme
+  ausstehend.
+- `abgenommen`: Nachweis liegt vor und wurde gemaess GG-LESE-002 anerkannt.
+
+Akzeptanz: Fuer jede MVP-Anforderung ist genau ein Status aus diesem
+Vokabular und ein geplanter oder vorhandener Nachweis dokumentiert.
+
+### GG-ACCEPT-004 - Beispiel-Prompt und Beispiel-Antwort
+
+Prioritaet: MVP
+
+Das Repository muss einen Beispiel-Prompt gemaess GG-AI-002 sowie eine
+strukturierte Beispiel-Antwort (JSON oder Markdown) enthalten.
+
+Akzeptanz: Ein reproduzierbares Skript oder ein Test erzeugt aus dem
+MVP-Demo-Projekt den Beispiel-Prompt. Die Beispiel-Antwort laesst sich in das
+Demo-Projekt zurueckspielen, ohne dass Werte ohne Bestaetigung gemaess
+GG-AI-001 final werden.
+
+---
+
+## 13. Risiken und Annahmen
+
+Dieses Kapitel listet zuerst die identifizierten Risiken (`GG-RISK-*`) und
+anschliessend die zugrundeliegenden Annahmen (`GG-ASSUMP-*`).
+
+### GG-RISK-001 - Aendernde Formularquellen
+
+Formularlinks und Versionen koennen sich aendern.
+
+Gegenmassnahme: Quellenmonitoring, Abrufdatum und Profilversionen werden als
+Kernbestandteil des Systems behandelt (siehe GG-DATA-005, GG-FA-SRC-001).
+
+### GG-RISK-002 - Portal-only-Prozesse
+
+Einige Prozesse sind nicht vollstaendig aus oeffentlichen Formularen
+rekonstruierbar.
+
+Gegenmassnahme: Portal-only-Prozesse werden sichtbar markiert und nicht als
+automatisiert geloest dargestellt (siehe GG-FA-CAT-006).
+
+### GG-RISK-003 - Lizenzlage
+
+Viele Originalformulare weisen keine offene Nachnutzungslizenz aus.
+
+Gegenmassnahme: Originalformulare werden verlinkt und beschrieben, aber nicht
+ungeprueft neu verteilt (siehe GG-NONGOAL-004, GG-FA-CAT-007, GG-LIC-002).
+
+### GG-RISK-004 - Falsche Extraktion
+
+OCR-, Parser-, Prompt- und LLM-Ergebnisse koennen falsch sein.
+
+Gegenmassnahme: Automatische Werte bleiben Vorschlaege und muessen vor dem
+Export bestaetigt werden (siehe GG-AI-001, GG-DATA-002).
+
+### GG-RISK-005 - Scope-Wachstum
+
+Die Anzahl der Betreiber, Formulare und Sonderfaelle kann schnell wachsen.
+
+Gegenmassnahme: Der MVP startet mit einem Betreiberprofil, einem Falltyp und
+einem Exportpaket (siehe GG-DEC-001 bis GG-DEC-003).
+
+### GG-ASSUMP-001 - Deutsche Prozesse im Fokus
+
+Der MVP arbeitet ausschliesslich mit deutschen Netzanschluss-, Verguetungs-
+und Registerprozessen. Grenzueberschreitende oder nicht-deutsche Verfahren
+sind nicht Teil des Scopes.
+
+### GG-ASSUMP-002 - Nutzer mit Fachkenntnis
+
+Es wird angenommen, dass Nutzer einen elektrotechnischen oder fachlichen
+Hintergrund haben (z. B. Installateur, Projektentwickler, Antragsteller mit
+Vorkenntnissen). GridGuide ersetzt keine Schulung und keine Beratung.
+
+### GG-ASSUMP-003 - Oeffentliche Quellen als Grundlage
+
+Es wird angenommen, dass die im PDF- und XLSX-Katalog gelisteten Quellen
+oeffentlich zugaenglich sind und ihre Strukturen sich nicht grundlegend
+aendern, bevor sie ueber GG-FA-SRC-001 ueberwacht werden.
+
+### GG-ASSUMP-004 - Lokale Verarbeitung ist ausreichend
+
+Es wird angenommen, dass die zu verarbeitenden Projektdokumente auf einem
+Referenzsystem gemaess GG-NFA-PERF-001 lokal verarbeitet werden koennen,
+ohne dass eine zentrale Server-Infrastruktur erforderlich ist.
+
+### GG-ASSUMP-005 - Nutzer betreibt eigene KI extern
+
+Fuer den MVP wird angenommen, dass Nutzer einen externen KI-Dienst (z. B.
+einen Chat-Assistenten) selbst betreiben oder beauftragen, falls sie die
+Prompt-Erzeugung gemaess GG-AI-002 nutzen wollen. GridGuide stellt keinen
+KI-Dienst bereit und uebernimmt keine Verantwortung fuer dessen Antworten.
+
+---
+
+## 14. Getroffene MVP-Entscheidungen
+
+### GG-DEC-001 - Erstes Profil
+
+Status: entschieden
+
+Der MVP startet mit `Westnetz` als erstem Netzbetreiberprofil.
+
+### GG-DEC-002 - Erster Falltyp
+
+Status: entschieden
+
+Der MVP startet mit dem Falltyp `PV_NS_OhneSpeicher`: PV-Anlage im
+Niederspannungsbereich bis 30 kWp ohne Speicher mit Ueberschusseinspeisung.
+
+### GG-DEC-003 - Erster Output
+
+Status: entschieden
+
+Der MVP erzeugt zuerst ein ZIP- oder Ordner-Exportpaket mit Checkliste,
+Projektstammdaten, Warnungen, Quellen-/Profilversion und referenzierten
+Dokumenten oder Links. Vorbefuellte PDF-/XLSX-Formulare bleiben V1.
+
+### GG-DEC-004 - Frontend-Stack
+
+Status: entschieden
+
+Der MVP verwendet SvelteKit im Single-Page-Modus als Frontend (siehe
+GG-ARCH-008).
+
+### GG-DEC-005 - Open-Source-Lizenz
+
+Status: entschieden
+
+GridGuide wird unter Apache-2.0 veroeffentlicht (siehe GG-LIC-001).
+
+---
+
+## 15. Traceability-Start
+
+| Thema                       | Lastenheft-Anforderungen                                                 |
+| --------------------------- | ------------------------------------------------------------------------ |
+| Katalogbasierter Scope      | GG-FA-CAT-001 bis GG-FA-CAT-008                                          |
+| Lokale Tauri-App            | GG-MVP-001, GG-ARCH-001, GG-ARCH-008                                     |
+| Hexagonale Architektur      | GG-ARCH-002 bis GG-ARCH-006                                              |
+| DDD-Zuschnitt               | GG-ARCH-007, GG-DATA-001                                                 |
+| Projektpersistenz           | GG-FA-PROJ-001, GG-FA-PROJ-002, GG-NFA-BACKUP-001                        |
+| Dokumentanalyse             | GG-MVP-005, GG-MVP-006, GG-FA-DOC-001                                    |
+| Checklisten und Validierung | GG-MVP-004, GG-FA-VAL-001 bis GG-FA-VAL-003, GG-NFA-USE-001              |
+| Exportpaket                 | GG-MVP-007, GG-FA-EXPORT-001                                             |
+| KI als Vorschlagssystem     | GG-MVP-009, GG-AI-001, GG-AI-002, GG-DATA-002, GG-ACCEPT-004             |
+| Portal-only-Abgrenzung      | GG-MVP-008, GG-FA-CAT-006, GG-NONGOAL-002, GG-RISK-002                   |
+| Lizenz-/Nachnutzungsstatus  | GG-FA-CAT-007, GG-NONGOAL-004, GG-LIC-001, GG-LIC-002, GG-RISK-003       |
+| Lokale Verarbeitung         | GG-NFA-SEC-001, GG-NFA-SEC-002, GG-NFA-LOG-002                           |
+| Performance und Betrieb     | GG-NFA-PERF-001, GG-NFA-PERF-002, GG-NFA-INSTALL-001, GG-NFA-INSTALL-002 |
+| MVP-Entscheidungen          | GG-DEC-001 bis GG-DEC-005                                                |
+| Annahmen                    | GG-ASSUMP-001 bis GG-ASSUMP-005                                          |
+
+---
+
+## 16. Glossar
+
+| Begriff            | Bedeutung                                                                            |
+| ------------------ | ------------------------------------------------------------------------------------ |
+| Betreiberprofil    | Konfiguration fuer Netzbetreiber, Behoerde, Register oder Branchenquelle             |
+| Falltyp            | fachlicher Prozess wie Steckersolar, Speicher, PV ab 135 kW oder Redispatch          |
+| Demo-Falltyp       | Der im MVP verbindlich umgesetzte Falltyp `PV_NS_OhneSpeicher` (siehe GG-DEC-002)   |
+| Formularfamilie    | Gruppe fachlich verwandter Formulare wie Anmeldung, Inbetriebsetzung oder Verguetung |
+| Katalogseed        | kuratierter Startdatensatz aus `Katalog-pdf.md` und `Katalog-xlsx.md`                |
+| Pflichtunterlage   | Dokument, das fuer ein Profil und einen Falltyp erforderlich ist                     |
+| Nachnutzungsstatus | Hinweis, ob eine Quelle offen nutzbar, unbekannt oder nur zu verlinken ist           |
+| Portal-only        | Prozess, der offiziell ueber ein Portal laeuft und nicht durch PDF ersetzt wird      |
+| Vorbereitungshilfe | Funktion, die einen portalgefuehrten Prozess unterstuetzt, ohne ihn zu ersetzen      |
+| Einreichungspaket  | Export aus Checkliste, Stammdaten, Formularen, Nachweisen und Warnungen              |
+| Profilversion      | Versionierte Auspraegung eines Profils gemaess GG-DATA-005                           |
+| Schweregrad        | Klassifikation einer Warnung in `info`, `warnung`, `fehler` (siehe GG-NFA-USE-001)   |
+| Override-Bestaetigung | explizite, protokollierte Nutzerentscheidung, einen Export trotz `fehler` zu erzeugen (siehe GG-NFA-USE-001) |
+| RequirementStatus  | Vokabular fuer den Status eines Anforderungseintrags (siehe GG-ACCEPT-003)           |
+| Driving Adapter    | Adapter, der Nutzer- oder API-Anfragen in den Hexagon-Kern bringt                    |
+| Driven Adapter     | Adapter fuer externe Systeme wie PDF, XLSX, OCR, Storage, HTTP oder LLM              |
