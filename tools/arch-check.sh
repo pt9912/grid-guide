@@ -7,18 +7,27 @@
 #
 # Regeln:
 #   A) hexagon/core importiert keine Adapter-, Tauri-, PDF-, XLSX-,
-#      OCR-, HTTP- oder LLM-Crates.
-#   B) hexagon/ports/* enthalten nur Trait-/Typdefinitionen, keine
-#      konkreten impl-Bloecke mit Methodenkoerper.
-#   C) hexagon/ports/* importieren weder aus hexagon/adapters noch aus
-#      hexagon/core. Ports sind reine Abstraktionen und damit
+#      OCR-, HTTP- oder LLM-Crates. Das Pattern erfasst:
+#        - `use <crate>::...;`
+#        - `pub use <crate>::...;`
+#        - `use ::<crate>::...;` (absoluter Pfad)
+#        - `extern crate <crate>;`
+#      Aliase (`use tauri as t;`) und alleinstehende Imports
+#      (`use tauri;`) sind ebenfalls erfasst.
+#   B) hexagon/ports/* enthalten KEINE `impl`-Bloecke. Erlaubt sind
+#      Trait-, Struct-, Enum-, Type-Definitionen plus
+#      `pub mod`-Re-Exports. `impl Default` u. ae. sind ebenfalls
+#      verboten — Defaults gehoeren ueber `#[derive(Default)]` an
+#      die Struct/Enum-Definition. Komplexe Defaults gehoeren in
+#      Adapter/Use-Case-Implementierungen.
+#   C) hexagon/ports/* importieren weder aus hexagon/adapters noch
+#      aus hexagon/core. Ports sind reine Abstraktionen und damit
 #      Dependency-Senke; das verhindert die typischen Zyklen.
 #
 # Echte Zyklen-Erkennung (Rule D in V1) soll ueber `cargo modules`
 # laufen, sobald sich die Modulgraphen lohnen; siehe ADR 0004 §2.3.
 
-set -eu
-set -o pipefail
+set -euo pipefail
 
 # Farben nur, wenn STDOUT ein TTY ist.
 if [ -t 1 ]; then
@@ -35,19 +44,21 @@ VIOLATIONS=0
 # Heuristik-Pattern.
 #
 # Rule A: verbotene Top-Level-Crates und Adapter-Imports in
-# hexagon/core/**. tauri-build wird ausgeklammert (nur in build.rs).
-RULE_A_PATTERN='^[[:space:]]*use[[:space:]]+(tauri::|crate::adapters|reqwest|ureq|lopdf|pdf_extract|calamine|leptonica_sys|tesseract_sys)'
+# hexagon/core/**. Erfasst sowohl `use`/`pub use`/`extern crate` als
+# auch absoluten Pfad (`use ::tauri`). tauri-build wird ausgeklammert
+# (nur in build.rs).
+RULE_A_PATTERN='^[[:space:]]*(pub[[:space:]]+)?(use|extern[[:space:]]+crate)[[:space:]]+(::)?(tauri([[:space:]]|::|;|[[:space:]]+as[[:space:]])|crate::adapters|reqwest|ureq|lopdf|pdf_extract|calamine|leptonica_sys|tesseract_sys)'
 
 # Rule B: konkrete impl-Bloecke in hexagon/ports/**. Erlaubt sind
 # 'trait', 'struct', 'enum', 'type' Definitionen plus Re-Export-
-# Module. impl-Bloecke (auch derive-Macros werden hier nicht
-# getroffen, weil sie ueber #[derive(...)] generiert werden, nicht
-# ueber 'impl').
-RULE_B_PATTERN='^[[:space:]]*impl[[:space:]]'
+# Module. impl-Bloecke (auch `impl Default`, `impl<T>`) werden
+# verboten; #[derive(...)] generiert ueber Macros und wird nicht
+# vom Pattern getroffen.
+RULE_B_PATTERN='^[[:space:]]*impl[[:space:]<]'
 
 # Rule C: hexagon/ports importiert aus hexagon/adapters oder
 # hexagon/core. Beide sind verboten.
-RULE_C_PATTERN='^[[:space:]]*use[[:space:]]+crate::(adapters|hexagon::adapters|hexagon::core)'
+RULE_C_PATTERN='^[[:space:]]*(pub[[:space:]]+)?use[[:space:]]+crate::(adapters|hexagon::adapters|hexagon::core)'
 
 scan_rule() {
     local rule_id="$1"
@@ -85,6 +96,11 @@ scan_rule "C" "$RULE_C_PATTERN" "$SRC_HEXAGON/ports" \
 # Schaerft den Check selbst — wenn die Fixtures vorhanden sind und
 # der Aufruf das aktiviert, MUESSEN sie rote Verstoesse melden,
 # sonst ist der Check kaputt.
+# Der Meta-Check zaehlt _Rule-Invocations_ mit Hits, nicht einzelne
+# Hits. Aktuell zwei aktive Fixture-Scans (Rule A auf core, Rule B
+# auf ports), darum Threshold = 2. Wenn weitere Rule-Fixtures
+# dazukommen (z. B. Rule C), muss dieser Wert mitwachsen.
+EXPECTED_FIXTURE_VIOLATIONS=2
 if [ "${ARCH_CHECK_FIXTURES:-off}" = "on" ]; then
     printf '%bARCH_CHECK_FIXTURES=on: zusaetzlich Test-Fixtures pruefen%b\n' \
         "$BOLD" "$RESET"
@@ -96,9 +112,9 @@ if [ "${ARCH_CHECK_FIXTURES:-off}" = "on" ]; then
     scan_rule "B-FIXTURE" "$RULE_B_PATTERN" "$FIXTURES/ports" \
         "FIXTURE: bewusster Verstoss gegen Rule B"
 
-    if [ $VIOLATIONS -lt 2 ]; then
+    if [ $VIOLATIONS -lt $EXPECTED_FIXTURE_VIOLATIONS ]; then
         printf '%b[META] arch-check ist defekt — Fixtures sollten %d Verstoesse melden, gefunden: %d%b\n' \
-            "$RED$BOLD" "2" "$VIOLATIONS" "$RESET"
+            "$RED$BOLD" "$EXPECTED_FIXTURE_VIOLATIONS" "$VIOLATIONS" "$RESET"
         exit 2
     fi
 fi

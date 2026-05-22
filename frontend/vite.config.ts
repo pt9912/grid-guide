@@ -14,6 +14,9 @@ export default defineConfig({
   server: {
     port: 1420,
     strictPort: true,
+    // host: false bindet nur an localhost — Standard fuer Tauri-Dev,
+    // weil der WebView lokal anbindet. TAURI_DEV_HOST setzt Tauri,
+    // wenn iOS-/Android-Geraete im LAN getestet werden (post-MVP).
     host: host ?? false,
     hmr: host
       ? {

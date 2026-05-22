@@ -23,9 +23,14 @@ export default mergeConfig(
         provider: 'v8',
         reporter: ['text', 'lcov', 'html'],
         include: ['src/**/*.{js,ts,svelte}'],
+        // Excludes folgen GG-NFA-COV-004 Teil 2 (eng gefasst). Jeder
+        // Eintrag ist mit einzeiliger Begruendung kommentiert.
         exclude: [
+          // Test-Files sind per Definition kein Production-Code.
           'src/**/*.{test,spec}.{js,ts}',
+          // Vitest-Setup laeuft nur im Test-Runner, nicht zur Laufzeit.
           'src/setup-tests.ts',
+          // SvelteKit-Ambient-Type-Deklarationen ohne Laufzeitcode.
           'src/app.d.ts'
         ],
         thresholds: {
