@@ -23,6 +23,11 @@
       error = e instanceof Error ? e.message : String(e);
     }
   }
+
+  function onSubmit(event: SubmitEvent) {
+    event.preventDefault();
+    void onGreet();
+  }
 </script>
 
 <section>
@@ -33,7 +38,7 @@
   </p>
 
   <form
-    on:submit|preventDefault={onGreet}
+    onsubmit={onSubmit}
     aria-labelledby="greet-form-title"
   >
     <h2 id="greet-form-title">Tauri-Command-Demo</h2>

@@ -16,11 +16,19 @@ fn greet(name: &str) -> String {
     format!("Hello, {name}, from GridGuide!")
 }
 
-fn main() {
+/// Konfiguriert und startet die Tauri-Anwendung.
+///
+/// Ausgelagert aus `main()`, damit `main()` ein dreizeiliger Bootstrap
+/// bleibt und die App-Konstruktion in Tests gegen einen Mock-Runtime
+/// gefahren werden kann (folgt in M2+ mit echten Adaptern).
+fn run() -> Result<(), tauri::Error> {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![greet])
         .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+}
+
+fn main() {
+    run().expect("error while running tauri application");
 }
 
 #[cfg(test)]
