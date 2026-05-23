@@ -1,7 +1,13 @@
 # ADR 0005 — CI/Release mit GitHub Actions + tauri-action
 
-**Status:** Provisional
+**Status:** Accepted
 **Datum:** 2026-05-22
+**Status geaendert am:** 2026-05-23 (M1-Welle 7). MVP-Accept-
+Vertrag aus §4.1 erfuellt: `gates.yml` laeuft auf allen drei
+Plattformen, Linux-Job ist gruen, `release.yml`-Stub mit
+SHA-gepinnter `tauri-action` ist registriert. V1-Validierung
+(§4.2) bleibt als Folgearbeit offen unter
+[Trigger 015](../planning/open/015-release-workflow-validierung.md).
 **Bezug:** [ADR 0001](0001-documentation-and-planning-structure.md),
 [ADR 0003](0003-desktop-runtime-tauri.md),
 [ADR 0004](0004-quality-gates-and-coverage-tooling.md),
@@ -185,27 +191,54 @@ Risiken:
 
 ---
 
-## 4. Spike-Vertrag (Validierung vor `Accepted`)
+## 4. MVP-Accept-Vertrag und V1-Validierung
 
-Diese ADR wechselt von `Provisional` auf `Accepted`, sobald ein
-Skelett-Repo folgendes nachweist:
+Die Architekturentscheidung (GitHub Actions, Plattform-Matrix,
+`tauri-action` per SHA-Pin) wird mit dem MVP-Accept-Vertrag (§4.1)
+auf `Accepted` gehoben. Die operative Release-Validierung (§4.2)
+bleibt als V1-Folgearbeit offen und ist Voraussetzung fuer den
+Abschluss von `GG-NFA-CICD-003` und des Signing-Teils von
+`GG-NFA-CICD-004`.
+
+### 4.1 MVP-Accept (blockierend fuer `Accepted`)
 
 1. `gates.yml` laeuft auf allen drei Plattformen durch; der
-   Linux-Job ist gruen und als Required-Check hinterlegt.
-2. macOS- oder Windows-Job sind absichtlich rot gesetzt (z. B.
-   plattformspezifischer Test bewusst broken) und der Workflow
-   blockiert den Merge **nicht** — Best-Effort-Verhalten gemaess
-   `GG-NFA-CICD-002` ist nachgewiesen.
-3. Ein Demo-Tag (`v0.0.1-test`) loest `release.yml` aus, das einen
+   Linux-Job ist gruen. Der `Required-Check`-Marker fuer Linux
+   wird in den GitHub-UI-Branch-Rules gesetzt (Verifikation per
+   Screenshot oder `gh api`-Probe in der M1-Closure-Notiz).
+2. macOS- und Windows-Jobs laufen `make gates` durch; ein
+   rotes Best-Effort-Ergebnis blockiert den Merge **nicht**
+   (`GG-NFA-CICD-002`).
+3. `release.yml` existiert als `workflow_dispatch`-/Tag-Stub
+   mit SHA-gepinnter `tauri-action` (vgl. §2.4),
+   dokumentiert Secret-Quellen ueber `env`/`with`, und der
+   Workflow-File parsed ohne Fehler (sichtbar im
+   GitHub-Actions-UI als registrierter Workflow). Es ist
+   **nicht** erforderlich, dass `release.yml` im MVP einmal
+   tatsaechlich gelaufen ist — das ist V1 (§4.2).
+
+### 4.2 V1-Validierung (vor Schliessung von `GG-NFA-CICD-003` und Signing-Teil `GG-NFA-CICD-004`)
+
+Die folgenden Items sind **nicht** mehr blockierend fuer
+`Accepted`, bleiben aber als Folgearbeit offen (siehe
+[Trigger 015](../planning/open/015-release-workflow-validierung.md)):
+
+1. Ein Demo-Tag (`v0.0.1-test`) loest `release.yml` aus, das einen
    Release-Entwurf mit drei Bundles (`.AppImage`, `.deb` fuer Linux;
-   `.dmg` fuer macOS; `.msi` fuer Windows) erzeugt. Im MVP koennen die
-   Bundles unsigniert sein.
-4. Ein bewusst durchgereichtes Test-Secret erscheint im
+   `.dmg` fuer macOS; `.msi` fuer Windows) erzeugt. Im MVP-Stand
+   koennen die Bundles unsigniert sein.
+2. Ein bewusst durchgereichtes Test-Secret erscheint im
    Workflow-Log nur als Maskierungs-Token (`***`), nicht im
    Klartext.
-5. Ein PR aus einem Fork laeuft `gates.yml` durch und meldet
+3. Ein PR aus einem Fork laeuft `gates.yml` durch und meldet
    sichtbar, dass Signing-Secrets nicht verfuegbar waren — kein
    Workflow-Fehler aus diesem Grund.
+
+Begruendung der Verschiebung: Items 4.2.1–4.2.3 brauchen einen
+echten Release-Tag, Signing-Secret-Operationen und einen Fork-PR.
+Diese Schritte sind operativ in V1 angesiedelt (`GG-NFA-INSTALL-002`,
+`GG-NFA-CICD-003`); ein MVP-Skelett kann sie nicht erbringen, ohne
+selbst V1 zu sein.
 
 ---
 
