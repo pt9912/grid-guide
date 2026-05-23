@@ -21,7 +21,7 @@ historisch fuer die geschaerfte Stelle.
 | 0001 | [Dokumentations- und Planungsstruktur](0001-documentation-and-planning-structure.md) | Accepted    | 2026-05-22 | —                         |
 | 0002 | [Frontend-Stack: SvelteKit 2.x (SPA)](0002-frontend-stack-sveltekit.md)              | Accepted    | 2026-05-22 | —                         |
 | 0003 | [Desktop-Runtime: Tauri 2.x](0003-desktop-runtime-tauri.md)                          | Accepted    | 2026-05-22 | —                         |
-| 0004 | [Quality-Gates- und Coverage-Tooling](0004-quality-gates-and-coverage-tooling.md)    | Accepted    | 2026-05-22 | —                         |
+| 0004 | [Quality-Gates- und Coverage-Tooling](0004-quality-gates-and-coverage-tooling.md)    | Accepted    | 2026-05-22 | §2.4 Implementierungs-Abweichung (LCOV-Filter statt cargo-llvm-cov-Include): siehe Trigger 017. |
 | 0005 | [CI/Release mit GitHub Actions + tauri-action](0005-ci-release-tauri-action.md)      | Accepted    | 2026-05-22 | §4 als MVP-Accept + V1-Validierung gegliedert; V1-Items siehe Trigger 015. |
 
 ---
