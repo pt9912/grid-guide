@@ -172,8 +172,8 @@ coverage-frontend: install-frontend
 	@mkdir -p $(COVERAGE_DIR)
 	cd $(FRONTEND_DIR) && $(PNPM) run test:coverage
 
-coverage-critical: coverage-rust ## 90% kritische Domainlogik (GG-NFA-COV-002 via tools/coverage-critical.sh)
-	$(TOOLS_DIR)/coverage-critical.sh $(COVERAGE_DIR)/rust.lcov
+coverage-critical: coverage-rust ## 90% kritische Domainlogik (GG-NFA-COV-002 via tools/coverage-critical.py)
+	python3 $(TOOLS_DIR)/coverage-critical.py $(COVERAGE_DIR)/rust.lcov --source-root $(TAURI_DIR)/src
 
 # ============================================================
 # Architektur-Check (GG-NFA-QG-003)

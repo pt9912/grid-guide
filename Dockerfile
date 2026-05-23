@@ -87,12 +87,21 @@ ENTRYPOINT ["/usr/local/bin/docker-entrypoint-lock-refresh.sh"]
 FROM pnpm-base AS system-deps
 
 ARG RUST_VERSION
+ARG TREE_SITTER_VERSION=0.23.2
+ARG TREE_SITTER_RUST_VERSION=0.23.2
 
 # Tauri-2.x-Linux-Build-Abhaengigkeiten + Rust-Compile-Tooling.
 # libsoup-3.0-dev ist transitiv via webkit2gtk-4.1, wird aber
 # explizit gelistet (M1-Slice-Plan §3 W5).
 # libxdo-dev nur fuer global-shortcut/clipboard-Plugins — in M1
 # nicht aktiviert; bewusst weggelassen.
+# python3-pip + tree-sitter-py-bindings sind fuer
+# tools/coverage-critical.py noetig: das Skript scannt
+# `hexagon/core/**.rs` per tree-sitter-rust nach dem Marker
+# `GG-NFA-COV-002` in Modul-Kommentaren und baut die PATTERN-Liste
+# daraus auf (siehe Trigger 017). `--break-system-packages` ist im
+# Build-Container akzeptabel, weil das Image dediziert fuer den
+# Build ist; Versionen sind ueber ARGs gepinnt.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         build-essential \
@@ -107,7 +116,11 @@ RUN apt-get update \
         patchelf \
         file \
         make \
-    && rm -rf /var/lib/apt/lists/*
+        python3-pip \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip3 install --break-system-packages --no-cache-dir \
+        "tree-sitter==${TREE_SITTER_VERSION}" \
+        "tree-sitter-rust==${TREE_SITTER_RUST_VERSION}"
 
 # Rust via rustup. Toolchain-Version aus ARG gepinnt; rustup
 # installiert systemweit nach /usr/local/cargo + /usr/local/rustup.
