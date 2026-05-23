@@ -83,15 +83,20 @@ Lokal und in CI:
 Pre-commit-Hooks sind optional; die Gates muessen unabhaengig
 reproduzierbar laufen.
 
-## Branch-Protection (aktiv ab M1-Welle 6)
+## Branch-Protection
 
-**Vor M1-Welle 6 nicht aktiv**, weil noch kein
-`.github/workflows/gates.yml` existiert. Nach Welle 6 gilt:
+Aktiv ab M1-Welle 6 (siehe `.github/workflows/gates.yml`):
 
 - Linux-Job aus `.github/workflows/gates.yml` ist Required-Check
-  ([`GG-NFA-CICD-002`](spec/lastenheft.md)).
+  ([`GG-NFA-CICD-002`](spec/lastenheft.md)). Die Markierung als
+  Required erfolgt in den Branch-Protection-Rules von GitHub
+  (Repository-Settings → Branches → Rule `main`), nicht im
+  Workflow selbst.
 - macOS- und Windows-Jobs sind im MVP Best-Effort und blockieren
   den Merge nur bei plattformspezifischer Aenderung.
+- Pull-Requests aus Forks erhalten keinen Secret-Zugriff
+  (Standard-Verhalten von GitHub Actions, bewusst beibehalten —
+  vgl. ADR 0005 §2.5).
 
 ## Beitragen
 
