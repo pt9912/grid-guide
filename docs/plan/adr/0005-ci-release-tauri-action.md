@@ -81,10 +81,18 @@ strategy:
   fail-fast: false
   matrix:
     include:
-      - { runner: ubuntu-22.04,  platform: linux,   required: true  }
+      - { runner: ubuntu-24.04,  platform: linux,   required: true  }
       - { runner: macos-latest,  platform: macos,   required: false }
       - { runner: windows-latest, platform: windows, required: false }
 ```
+
+Begruendung Ubuntu-Version: `ubuntu-24.04` (Noble) liefert
+`libwebkit2gtk-4.1-dev` und `libsoup-3.0-dev` aus dem Standard-
+Repository — dieselben Pakete, die das Build-Container-Image
+(Debian Bookworm, vgl. ADR 0004) nutzt. `ubuntu-22.04` (Jammy)
+hat Webkit-4.1 nicht durchgaengig im Standard-Archiv und erzwingt
+PPA-Workarounds; Konsistenz mit der Container-Linie ist wichtiger
+als das laengere LTS-Fenster von Jammy.
 
 `required: true` bedeutet: Linux-Job ist als „required check" in der
 Branch-Protection-Regel hinterlegt; Windows-/macOS-Jobs sind
