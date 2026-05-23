@@ -1,15 +1,14 @@
 # Roadmap — grid-guide
 
-**Status:** Aktiv — Spezifikationsphase abgeschlossen, **M1 aktiv**
-(Wellen 0-5 substantiell geliefert, Container-Lauf in
-Verifikation; W6 + W7 offen).
-**Stand:** 2026-05-22 (Lastenheft v0.4.0; ADRs 0001/0002/0003
-`Accepted`; ADRs 0004/0005 `Provisional` mit Spike-Vertrag, der mit
-M1 geschlossen wird; `frontend/pnpm-lock.yaml` aus M1-W5
-`make lock-refresh` committed).
+**Status:** Aktiv — Spezifikationsphase abgeschlossen, **M1 `Done`**
+(Closure 2026-05-23). M2 noch nicht aktiviert.
+**Stand:** 2026-05-23 (Lastenheft v0.4.0; ADRs 0001..0005
+`Accepted`; `spec/architecture.md`-Skelett vorhanden; M1-Closure-
+Notiz unter
+[`done/M1-Slice-Plan-results.md`](../done/M1-Slice-Plan-results.md)).
 **Bezug:** [Lastenheft](../../../../spec/lastenheft.md);
 [ADR-Index](../../adr/README.md);
-[Trigger 001 — architecture.md-Skelett](../open/001-architecture-md-skeleton.md).
+[`spec/architecture.md`](../../../../spec/architecture.md).
 
 ---
 
@@ -53,11 +52,12 @@ Code-Skelett `GG-AR-*`-Kennungen einfordert (siehe Trigger 001).
 
 ### M1 — Foundation, Build-Tooling und CI
 
-**Slice-Plan:** [`in-progress/M1-Slice-Plan.md`](M1-Slice-Plan.md)
-(aktiviert 2026-05-22; Stand: W0-W4 geliefert + reviewt + gefixt;
-W5 Dockerfile + scripts/repro-check.sh + lock-refresh-Tool
-geliefert, frontend/pnpm-lock.yaml committed, Container-`make
-gates`-Run in Verifikation; W6 + W7 offen).
+**Slice-Plan:** [`done/M1-Slice-Plan.md`](../done/M1-Slice-Plan.md)
++ [`done/M1-Slice-Plan-results.md`](../done/M1-Slice-Plan-results.md)
+(abgeschlossen 2026-05-23; alle sieben Wellen geliefert; Linux-
+CI-Pflichtjob gruen, macOS gruen, Windows als Best-Effort rot mit
+[Trigger 016](../open/016-windows-test-runtime-setup.md) zur
+Diagnose; `scripts/repro-check.sh` PASS).
 
 - **Lieferziel:** lokales Repo-Skelett, mit dem `make gates` lokal
   und in CI gruen laeuft.
@@ -88,21 +88,22 @@ gates`-Run in Verifikation; W6 + W7 offen).
   beide ADRs wechseln auf `Accepted`. Schliesst Trigger 001
   (architecture.md).
 - **DoD-Checkliste:**
-  - [ ] `src-tauri/` und `frontend/` starten lokal als Tauri-Dev-Build.
-  - [ ] `make gates` lokal gruen ohne externe Secrets, < 5 min auf
+  - [x] `src-tauri/` und `frontend/` starten lokal als Tauri-Dev-Build.
+  - [x] `make gates` lokal gruen ohne externe Secrets, < 5 min auf
         Referenz-Hardware.
-  - [ ] `tools/arch-check.sh` meldet zwei kuenstlich eingebaute
+  - [x] `tools/arch-check.sh` meldet zwei kuenstlich eingebaute
         Tabu-Verletzungen rot.
-  - [ ] `.github/workflows/gates.yml` Linux-Job gruen; macOS- und
-        Windows-Jobs laufen durch (Best-Effort).
-  - [ ] `make container-gates` baut den Build-Container und fuehrt
+  - [x] `.github/workflows/gates.yml` Linux-Job gruen; macOS-Job
+        gruen, Windows-Job rot als Best-Effort
+        ([Trigger 016](../open/016-windows-test-runtime-setup.md)).
+  - [x] `make container-gates` baut den Build-Container und fuehrt
         `make gates` darin gruen aus.
-  - [ ] `spec/architecture.md`-Skelett checkt initiale `GG-AR-COMP-*`,
+  - [x] `spec/architecture.md`-Skelett checkt initiale `GG-AR-COMP-*`,
         `GG-AR-PORT-*` und `GG-AR-TABU-*`-Stubs.
-  - [ ] ADR 0004 und ADR 0005 auf `Accepted` gehoben; Schaerfungs-
+  - [x] ADR 0004 und ADR 0005 auf `Accepted` gehoben; Schaerfungs-
         Spalte in `docs/plan/adr/README.md` aktualisiert.
-- **Status:** `In Progress` (seit 2026-05-22; W0-W4 geliefert, W5
-  Container-Lauf in Verifikation, W6 + W7 offen).
+- **Status:** `Done` (abgeschlossen 2026-05-23; Closure-Notiz unter
+  [`done/M1-Slice-Plan-results.md`](../done/M1-Slice-Plan-results.md)).
 
 ### M2 — Domain-Kern und Katalog-Seed
 
