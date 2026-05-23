@@ -1,11 +1,14 @@
 # Roadmap — grid-guide
 
 **Status:** Aktiv — Spezifikationsphase abgeschlossen, **M1 `Done`**
-(Closure 2026-05-23). M2 noch nicht aktiviert.
+(Closure 2026-05-23), **M2 `In Progress`** (W0/W1/W2 abgeschlossen,
+W3 Westnetz-Seed steht aus).
 **Stand:** 2026-05-23 (Lastenheft v0.4.0; ADRs 0001..0005
-`Accepted`; `spec/architecture.md`-Skelett vorhanden; M1-Closure-
-Notiz unter
-[`done/M1-Slice-Plan-results.md`](../done/M1-Slice-Plan-results.md)).
+`Accepted`; `spec/architecture.md`-Skelett vorhanden;
+M1-Closure-Notiz unter
+[`done/M1-Slice-Plan-results.md`](../done/M1-Slice-Plan-results.md);
+M2-Domain-Schicht produktiv unter
+[`src-tauri/src/hexagon/core/`](../../../../src-tauri/src/hexagon/core/)).
 **Bezug:** [Lastenheft](../../../../spec/lastenheft.md);
 [ADR-Index](../../adr/README.md);
 [`spec/architecture.md`](../../../../spec/architecture.md).
@@ -108,7 +111,9 @@ Diagnose; `scripts/repro-check.sh` PASS).
 ### M2 — Domain-Kern und Katalog-Seed
 
 **Slice-Plan:** [`in-progress/M2-Slice-Plan.md`](M2-Slice-Plan.md)
-(aktiviert 2026-05-23 mit Welle 0; Welle 1 Vokabular-Enums laeuft).
+(aktiviert 2026-05-23; Stand: W0/W1/W2 abgeschlossen — neun
+Vokabular-Enums + acht Domain-Strukturen + Coverage-Critical-Gate
+via Python+tree-sitter; W3 Westnetz-Seed steht aus).
 
 - **Lieferziel:** Datenmodell und Vokabulare im hexagonalen Kern,
   plus erstes Profil und erster Falltyp als Seed.
@@ -141,7 +146,7 @@ Diagnose; `scripts/repro-check.sh` PASS).
         gemaess `GG-NFA-COV-001`.
   - [ ] Architektur-Check meldet keine Domain-zu-Adapter-Imports
         (`GG-CC-003`).
-- **Status:** `In Progress` (seit 2026-05-23 mit M2-Welle 0).
+- **Status:** `In Progress` (seit 2026-05-23; W0/W1/W2 abgeschlossen, W3-W5 ausstehend).
 
 ### M3 — Projekt-Lifecycle und Persistenz
 

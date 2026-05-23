@@ -12,14 +12,17 @@ oder fachkundige Elektroinstallateure (siehe
 
 ## Status
 
-Aktiv in Entwicklung — **M1 (Foundation, Build-Tooling und CI)
-abgeschlossen** (2026-05-23, alle sieben Wellen geliefert; Linux-
-CI-Pflichtjob gruen, macOS gruen, Windows als Best-Effort offen
-gemaess [Trigger 016](docs/plan/planning/open/016-windows-test-runtime-setup.md)).
-M2 (Domain-Kern + Katalog-Seed) noch nicht aktiviert. Siehe
+Aktiv in Entwicklung — **M1 abgeschlossen** (2026-05-23, alle
+sieben Wellen geliefert; Linux-CI-Pflichtjob gruen, macOS gruen,
+Windows als Best-Effort offen gemaess
+[Trigger 016](docs/plan/planning/open/016-windows-test-runtime-setup.md)).
+**M2 (Domain-Kern + Katalog-Seed) in Arbeit** — W0/W1/W2
+geliefert (neun Vokabular-Enums + acht Domain-Strukturen +
+Coverage-Critical-Gate); Welle 3 (Westnetz-Seed `GG-DEC-001`)
+steht aus. Siehe
 [Roadmap](docs/plan/planning/in-progress/roadmap.md),
-[M1-Slice-Plan](docs/plan/planning/done/M1-Slice-Plan.md) und
-[M1-Closure-Notiz](docs/plan/planning/done/M1-Slice-Plan-results.md).
+[M1-Closure-Notiz](docs/plan/planning/done/M1-Slice-Plan-results.md)
+und [M2-Slice-Plan](docs/plan/planning/in-progress/M2-Slice-Plan.md).
 
 ## Quick-Start
 

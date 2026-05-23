@@ -1,7 +1,7 @@
 # M2-Slice-Plan — Domain-Kern und Katalog-Seed
 
-**Status:** In Progress (aktiviert 2026-05-23 mit Welle 0; Welle 1
-Vokabular-Enums laeuft).
+**Status:** In Progress (aktiviert 2026-05-23 mit Welle 0;
+Wellen 0/1/2 abgeschlossen; Welle 3 Westnetz-Seed steht aus).
 **Eroeffnet:** 2026-05-23
 **Aktiviert:** 2026-05-23
 **Bezug:** [Roadmap M2](roadmap.md#m2--domain-kern-und-katalog-seed);
