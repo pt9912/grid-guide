@@ -1,7 +1,13 @@
 # ADR 0004 — Quality-Gates- und Coverage-Tooling
 
-**Status:** Provisional
+**Status:** Accepted
 **Datum:** 2026-05-22
+**Status geaendert am:** 2026-05-23 (M1-Welle 7). Spike-Vertrag
+aus §4 nachgewiesen mit `make container-gates` und
+`make container-ci` gegen den gepinten Build-Container: alle
+Gates gruen, Rust-Coverage ~94 % Lines, Frontend-Coverage
+~94,73 % Lines, deb+AppImage-Bundle erfolgreich extrahiert
+(siehe Commits 9c328b1..a96c091 und M1-Closure-Notiz).
 **Bezug:** [ADR 0001](0001-documentation-and-planning-structure.md),
 [ADR 0002](0002-frontend-stack-sveltekit.md),
 [ADR 0003](0003-desktop-runtime-tauri.md),
