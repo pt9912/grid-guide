@@ -18,7 +18,7 @@
 use tauri::Runtime;
 
 mod adapters;
-mod hexagon;
+pub mod hexagon;
 
 #[tauri::command]
 fn greet(name: &str) -> String {
