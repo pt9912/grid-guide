@@ -1,0 +1,13 @@
+# Auto-generierte oder vom Tooling gepflegte Artefakte — nicht
+# formatieren. Prettier soll nur handgepflegten Sourcecode anfassen.
+
+# Lockfile (von pnpm gepflegt, Form ist garantiert)
+pnpm-lock.yaml
+
+# Build-Outputs
+.svelte-kit/
+build/
+coverage/
+
+# Dependencies
+node_modules/

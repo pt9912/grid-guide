@@ -10,6 +10,18 @@ license = "MIT"
 publish = false
 description = "Lokaler Tauri-Desktop-Assistent fuer Netz- und Behoerdenantraege (siehe spec/lastenheft.md)"
 
+# Tauri-2.x-Standardmuster: testbarer Logikkern als Bibliothek,
+# Wry-Bootstrap als duenner Bin-Wrapper. Lib-Name `gridguide_lib`,
+# damit Bin (`gridguide`) und Lib innerhalb desselben Pakets
+# eindeutig sind.
+[lib]
+name = "gridguide_lib"
+path = "src/lib.rs"
+
+[[bin]]
+name = "gridguide"
+path = "src/main.rs"
+
 [build-dependencies]
 tauri-build = { version = "2.0.6", features = [] }
 
@@ -17,6 +29,12 @@ tauri-build = { version = "2.0.6", features = [] }
 tauri = { version = "2.11", features = [] }
 serde = { version = "1.0.217", features = ["derive"] }
 serde_json = "1.0.135"
+
+# Tauri-Test-Feature liefert MockRuntime + mock_builder/mock_context,
+# damit configure() und der Invoke-Handler-Aufbau ohne echte
+# Wry/GUI-Runtime gecovert werden koennen (siehe lib.rs tests).
+[dev-dependencies]
+tauri = { version = "2.11", features = ["test"] }
 
 [lints.rust]
 unsafe_code = "forbid"

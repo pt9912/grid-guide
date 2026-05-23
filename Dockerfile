@@ -40,8 +40,8 @@
 ARG RUST_VERSION=1.95.0
 ARG NODE_VERSION=24.16.0
 ARG PNPM_VERSION=11.2.2
-ARG CARGO_LLVM_COV_VERSION=0.6.16
-ARG CARGO_AUDIT_VERSION=0.21.0
+ARG CARGO_LLVM_COV_VERSION=0.8.7
+ARG CARGO_AUDIT_VERSION=0.22.1
 ARG CARGO_MODULES_VERSION=0.17.0
 ARG TAURI_CLI_VERSION=2.11.2
 
@@ -63,15 +63,23 @@ RUN corepack enable \
 # ============================================================
 # Stage 1b: lock-refresh-tool — minimal pnpm-only-Image.
 #
-# Genutzt von `make lock-refresh`: mountet den Host-Workspace und
-# laesst pnpm `--lockfile-only` darin laufen. XDG_CACHE_HOME zeigt
-# auf /tmp, damit pnpm keinen Schreibversuch in ~/.cache des
-# (gemounteten) Host-Users macht.
+# Genutzt von `make lock-refresh`: COPY frontend-Manifeste in das
+# Image, Entrypoint laesst pnpm `--lockfile-only` laufen und schreibt
+# das frische pnpm-lock.yaml als Tar-Stream auf stdout zurueck. Der
+# Host extrahiert per `| tar -x` ins frontend-Verzeichnis. Damit
+# entfaellt der bisherige Host-Mount (und das damit verbundene
+# UID-Pinning).
 # ============================================================
 FROM pnpm-base AS lock-refresh-tool
 
 ENV XDG_CACHE_HOME=/tmp/.cache
 WORKDIR /workspace
+
+COPY frontend/package.json frontend/.npmrc /workspace/
+COPY frontend/pnpm-lock.yaml* /workspace/
+COPY scripts/docker-entrypoint-lock-refresh.sh /usr/local/bin/
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint-lock-refresh.sh"]
 
 # ============================================================
 # Stage 1c: System-Dependencies (pnpm-base + Rust + apt)
@@ -131,6 +139,14 @@ RUN cargo install --locked --version "${CARGO_LLVM_COV_VERSION}" cargo-llvm-cov
 ARG CARGO_AUDIT_VERSION
 RUN cargo install --locked --version "${CARGO_AUDIT_VERSION}" cargo-audit
 
+# cargo-audit liest seine Konfiguration (Advisory-Allowlist) aus
+# $CARGO_HOME/audit.toml. Die kanonische Liste lebt im Repo unter
+# src-tauri/audit.toml (siehe docs/plan/planning/open/012-rustsec-
+# allowlist-revisit.md). Hier kopieren wir sie an die von
+# cargo-audit erwartete Stelle, damit die Allowlist sowohl im
+# Container als auch via Repo-Review nachvollziehbar bleibt.
+COPY src-tauri/audit.toml /usr/local/cargo/audit.toml
+
 ARG CARGO_MODULES_VERSION
 RUN cargo install --locked --version "${CARGO_MODULES_VERSION}" cargo-modules
 
@@ -143,9 +159,10 @@ RUN rustup component add llvm-tools-preview
 # ============================================================
 # Stage 3: Gates
 #
-# Default-Entry: `make gates`. Coverage-Output liegt unter
-# /work/.coverage und wird vom Host via Volume-Mount eingesammelt
-# (siehe Makefile-Target `container-gates`).
+# Default-Entry: `make gates`. Reicht keine Artefakte heraus, der
+# Exit-Code ist die Pass/Fail-Aussage. Wer Coverage-Reports oder das
+# Bundle braucht, baut Stage `coverage-report` bzw. `ci-bundle` und
+# extrahiert deren Tar-Stream aus stdout (siehe Makefile).
 # ============================================================
 FROM tools AS gates
 
@@ -174,8 +191,43 @@ RUN cd /work/frontend \
        else \
          echo "WARN: pnpm-lock.yaml fehlt — fallback auf pnpm install ohne Lock"; \
          pnpm install; \
-       fi
+       fi \
+    && touch /work/frontend/node_modules/.install-stamp
 
 COPY . /work
 
+# COPY ueberschreibt frontend/package.json mit der Host-Quelle und
+# kann deren mtime juenger als den Install-Stamp setzen — dann wuerde
+# die Makefile-Regel `install-frontend` erneut feuern. Den Stamp
+# danach refreshen, damit `make gates` zur Laufzeit den Install
+# ueberspringt.
+RUN touch /work/frontend/node_modules/.install-stamp
+
 CMD ["make", "gates"]
+
+# ============================================================
+# Stage 3b: coverage-report — gates + Coverage-Artefakt-Export
+#
+# Identisch zur gates-Stage; nur der ENTRYPOINT laeuft `make
+# coverage` und schreibt /work/.coverage als Tar auf stdout. Wird
+# vom Host via Pipe in das gewuenschte Zielverzeichnis extrahiert
+# (siehe Makefile-Target `container-coverage-report`).
+# ============================================================
+FROM gates AS coverage-report
+
+COPY scripts/docker-entrypoint-coverage-report.sh /usr/local/bin/
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint-coverage-report.sh"]
+CMD []
+
+# ============================================================
+# Stage 3c: ci-bundle — `make ci` + Bundle/Coverage-Export
+#
+# Laeuft `make ci` (gates + bundle) und schreibt einen Tar-Stream
+# mit dist/ (Bundle) und .coverage/ auf stdout. Wenn bundle.active
+# in tauri.conf.json false ist, enthaelt der Tar nur .coverage/.
+# ============================================================
+FROM gates AS ci-bundle
+
+COPY scripts/docker-entrypoint-ci-bundle.sh /usr/local/bin/
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint-ci-bundle.sh"]
+CMD []

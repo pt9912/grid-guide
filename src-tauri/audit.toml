@@ -1,0 +1,38 @@
+# cargo-audit Allowlist fuer GridGuide.
+# Siehe docs/plan/planning/open/012-rustsec-allowlist-revisit.md
+# (Trigger: Tauri-Update auf gtk-rs-Nachfolger oder libadwaita).
+#
+# Jeder Eintrag listet die zugehoerige Crate, damit ein Review
+# nachvollziehen kann, was wir akzeptieren. Neue unmaintained-
+# Warnings sind weiterhin Gate-blockierend (Makefile dep-audit-rust
+# hat `--deny unmaintained`).
+#
+# cargo-audit liest diese Datei aus $CARGO_HOME/audit.toml; das
+# Dockerfile (Stage tools) kopiert sie nach dem cargo-audit-Install
+# dorthin. Bei lokaler Ausfuehrung ausserhalb des Containers muss
+# der Aufrufer entsprechend `--ignore`-Flags setzen oder die Datei
+# selbst ablegen — siehe Makefile fuer die kanonische Variante.
+
+[advisories]
+ignore = [
+    # Tauri-2.x-Linux-WebView-Stack (gtk-rs 0.18, upstream unmaintained):
+    "RUSTSEC-2024-0411",  # gdkwayland-sys
+    "RUSTSEC-2024-0412",  # gdk
+    "RUSTSEC-2024-0413",  # atk
+    "RUSTSEC-2024-0414",  # gdkx11-sys
+    "RUSTSEC-2024-0415",  # gtk
+    "RUSTSEC-2024-0416",  # atk-sys
+    "RUSTSEC-2024-0417",  # gdkx11
+    "RUSTSEC-2024-0418",  # gdk-sys
+    "RUSTSEC-2024-0419",  # gtk3-macros
+    "RUSTSEC-2024-0420",  # gtk-sys
+    "RUSTSEC-2024-0429",  # glib
+    # proc-macro-Toolkette (transitiv via gtk-rs-Macros/Tauri-Macros):
+    "RUSTSEC-2024-0370",  # proc-macro-error
+    # unic-* (transitiv via idna/url; vom Tauri-Url-Handling gezogen):
+    "RUSTSEC-2025-0075",  # unic-char-range
+    "RUSTSEC-2025-0080",  # unic-common
+    "RUSTSEC-2025-0081",  # unic-char-property
+    "RUSTSEC-2025-0098",  # unic-ucd-version
+    "RUSTSEC-2025-0100",  # unic-ucd-ident
+]

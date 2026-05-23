@@ -150,9 +150,14 @@ test-frontend: install-frontend
 .PHONY: coverage coverage-rust coverage-frontend coverage-critical
 coverage: coverage-rust coverage-frontend coverage-critical ## Coverage beider Stacks + kritische Module
 
+# src/main.rs ist nur der Wry-Bootstrap (drei Zeilen) und kann ohne
+# echtes Display nicht gecovert werden; die testbare Logik liegt in
+# src/lib.rs (siehe lib.rs Doc-Kommentar). --ignore-filename-regex
+# nimmt main.rs daher strukturell aus der Messung.
 coverage-rust:
 	@mkdir -p $(COVERAGE_DIR)
 	cd $(TAURI_DIR) && $(CARGO) llvm-cov --locked \
+		--ignore-filename-regex 'src/main\.rs$$' \
 		--lcov --output-path $(COVERAGE_DIR)/rust.lcov \
 		--fail-under-lines 80
 
@@ -180,8 +185,11 @@ arch-check: ## Hexagonale Tabu-Regeln durchsetzen
 # Dependency-Audit (GG-NFA-QG-005)
 #
 # cargo-audit-Flags explizit ausgeschrieben (statt --deny warnings),
-# weil die "warnings"-Kurzform versionsabhaengig ist. Wir verbieten
-# alle vier Severity-Kinds, die das Tool kennt.
+# weil die "warnings"-Kurzform versionsabhaengig ist. Die drei
+# gelisteten Werte (unmaintained, unsound, yanked) sind die in
+# aktuellem cargo-audit (>=0.21) gueltigen Severity-Kinds neben
+# "warnings". "notice" existierte in aelteren Versionen, ist heute
+# kein valides --deny-Argument mehr.
 # ============================================================
 
 .PHONY: dep-audit dep-audit-rust dep-audit-frontend
@@ -191,14 +199,21 @@ dep-audit-rust:
 	cd $(TAURI_DIR) && $(CARGO) audit \
 		--deny unmaintained \
 		--deny unsound \
-		--deny yanked \
-		--deny notice
+		--deny yanked
 
 dep-audit-frontend: install-frontend
 	cd $(FRONTEND_DIR) && $(PNPM) audit --prod
 
 # ============================================================
 # Container-Variante (GG-NFA-INSTALL-004)
+#
+# Alle Container-Targets laufen ohne Bind-Mount und ohne UID-Pinning.
+# Der Container haelt sein Arbeitsverzeichnis komplett selbst; jede
+# Stage, die Artefakte zurueckreichen muss, hat einen eigenen
+# ENTRYPOINT (siehe scripts/docker-entrypoint-*.sh), der die Daten
+# als Tar-Stream auf stdout schreibt. Der Host extrahiert per Pipe
+# ins Zielverzeichnis. `set -o pipefail` in SHELLFLAGS sichert ab,
+# dass ein Docker-Fehler die Pipeline scheitern laesst.
 # ============================================================
 
 DIST_DIR := $(CURDIR)/dist
@@ -207,37 +222,29 @@ DIST_DIR := $(CURDIR)/dist
 lock-refresh: ## frontend/pnpm-lock.yaml im Container generieren (kein Host-pnpm/node noetig)
 	$(DOCKER) build --pull --target lock-refresh-tool \
 		-t $(CONTAINER_IMAGE):lock-refresh-tool $(CURDIR)
-	$(DOCKER) run --rm \
-		--user "$(shell id -u):$(shell id -g)" \
-		-e XDG_CACHE_HOME=/tmp/.cache \
-		-e XDG_DATA_HOME=/tmp/.data \
-		-v "$(FRONTEND_DIR):/workspace" \
-		-w /workspace \
-		$(CONTAINER_IMAGE):lock-refresh-tool \
-		pnpm install --lockfile-only --ignore-scripts \
-			--store-dir /tmp/.pnpm-store
+	$(DOCKER) run --rm $(CONTAINER_IMAGE):lock-refresh-tool \
+		| tar -C $(FRONTEND_DIR) -x
 
 .PHONY: container-gates
-container-gates: ## make gates im pinned Build-Container ausfuehren
-	$(DOCKER) build --pull -t $(CONTAINER_IMAGE) $(CURDIR)
+container-gates: ## make gates im pinned Build-Container ausfuehren (Exit-Code only)
+	$(DOCKER) build --pull --target gates -t $(CONTAINER_IMAGE) $(CURDIR)
+	$(DOCKER) run --rm $(CONTAINER_IMAGE)
+
+.PHONY: container-coverage-report
+container-coverage-report: ## make coverage im Container; .coverage/ via Tar herausreichen
+	$(DOCKER) build --pull --target coverage-report \
+		-t $(CONTAINER_IMAGE):coverage-report $(CURDIR)
 	@mkdir -p $(COVERAGE_DIR)
-	$(DOCKER) run --rm \
-		--user "$(shell id -u):$(shell id -g)" \
-		-v "$(COVERAGE_DIR):/work/.coverage" \
-		$(CONTAINER_IMAGE) make gates
+	$(DOCKER) run --rm $(CONTAINER_IMAGE):coverage-report \
+		| tar -C $(COVERAGE_DIR) -x
 
 .PHONY: container-ci
-container-ci: ## make ci im pinned Build-Container ausfuehren (Bundle wird extrahiert)
-	$(DOCKER) build --pull -t $(CONTAINER_IMAGE) $(CURDIR)
+container-ci: ## make ci im Container; dist/ + .coverage/ via Tar herausreichen
+	$(DOCKER) build --pull --target ci-bundle \
+		-t $(CONTAINER_IMAGE):ci-bundle $(CURDIR)
 	@mkdir -p $(COVERAGE_DIR) $(DIST_DIR)
-	$(DOCKER) run --rm \
-		--user "$(shell id -u):$(shell id -g)" \
-		-v "$(COVERAGE_DIR):/work/.coverage" \
-		-v "$(DIST_DIR):/work/dist" \
-		$(CONTAINER_IMAGE) sh -c 'make ci && \
-			mkdir -p /work/dist && \
-			cp -r /work/src-tauri/target/release/bundle/* /work/dist/ 2>/dev/null || \
-			echo "[container-ci] kein Bundle zum Extrahieren (tauri.conf.json bundle.active=false?)"'
+	$(DOCKER) run --rm $(CONTAINER_IMAGE):ci-bundle \
+		| tar -C $(CURDIR) -x
 
 # ============================================================
 # Pflege

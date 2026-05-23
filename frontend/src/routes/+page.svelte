@@ -33,24 +33,16 @@
 <section>
   <h1>GridGuide</h1>
   <p>
-    Skelett-Stand aus M1-Welle 2. Volle UI mit Projektuebersicht,
-    Profilauswahl und Export-Workflow folgt in M6.
+    Skelett-Stand aus M1-Welle 2. Volle UI mit Projektuebersicht, Profilauswahl und Export-Workflow
+    folgt in M6.
   </p>
 
-  <form
-    onsubmit={onSubmit}
-    aria-labelledby="greet-form-title"
-  >
+  <form onsubmit={onSubmit} aria-labelledby="greet-form-title">
     <h2 id="greet-form-title">Tauri-Command-Demo</h2>
 
     <label>
       Name
-      <input
-        type="text"
-        bind:value={name}
-        placeholder="Name eingeben"
-        data-testid="name-input"
-      />
+      <input type="text" bind:value={name} placeholder="Name eingeben" data-testid="name-input" />
     </label>
 
     <button type="submit" data-testid="greet-button">Begruessen</button>

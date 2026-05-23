@@ -26,13 +26,6 @@ export default [
     }
   },
   {
-    ignores: [
-      'build/',
-      '.svelte-kit/',
-      'node_modules/',
-      'coverage/',
-      '*.config.js',
-      '*.config.ts'
-    ]
+    ignores: ['build/', '.svelte-kit/', 'node_modules/', 'coverage/', '*.config.js', '*.config.ts']
   }
 ];
