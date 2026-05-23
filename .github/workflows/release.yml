@@ -77,6 +77,8 @@ jobs:
 
       - name: pnpm setup
         uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
 
       - name: Node toolchain
         uses: actions/setup-node@v4

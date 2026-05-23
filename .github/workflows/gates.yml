@@ -79,10 +79,14 @@ jobs:
           cache-all-crates: "true"
 
       # pnpm-Setup VOR setup-node, weil setup-node mit cache=pnpm
-      # ein bereits installiertes pnpm erwartet. Version wird aus
-      # frontend/package.json (packageManager) gelesen.
+      # ein bereits installiertes pnpm erwartet. Version liest die
+      # Action aus frontend/package.json (packageManager-Feld);
+      # ohne explizites package_json_file scannt sie nur den Repo-
+      # Root und findet das Feld nicht.
       - name: pnpm setup
         uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
 
       - name: Node toolchain
         uses: actions/setup-node@v4
