@@ -54,3 +54,19 @@ mindestens enthalten:
 Vor dem Trigger soll keine `architecture.md` angelegt werden — sie
 wuerde nur Inhalte aus Lastenheft und ADRs umkopieren und mit dem
 ersten Code-Skelett ohnehin umgeschrieben werden muessen.
+
+---
+
+## Closure
+
+**Abgeschlossen:** 2026-05-23 (M1-Welle 7).
+**Geliefert:** `spec/architecture.md`-Skelett mit den vier
+Pflichtsektionen (`GG-AR-COMP-*` Komponenten,
+`GG-AR-PORT-DRV-*`/`GG-AR-PORT-DRN-*` Ports,
+`GG-AR-TABU-001..003` Tabus, `GG-AR-OPEN-*` Slots) plus
+`AC-*`-Acceptance-Contracts.
+
+**Bleibt offen / Folgearbeit:** Die Komponenten-Stubs erhalten
+ihre Use-Cases und Domain-Modelle in M2..M7; jeder
+`GG-AR-OPEN-*`-Slot loest sich durch eine eigene ADR auf
+(siehe Trigger-Liste in `architecture.md` §7).
