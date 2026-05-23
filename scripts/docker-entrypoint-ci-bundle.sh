@@ -24,8 +24,19 @@ make ci 1>&2
 STAGING="$(mktemp -d)"
 trap 'rm -rf "$STAGING"' EXIT
 
+# .coverage/ enthaelt Rust-LCOV (/work/.coverage/rust.lcov) UND
+# Frontend-Coverage (vitest schreibt nach /work/frontend/coverage,
+# nicht nach /work/.coverage). Beide in das Staging-.coverage-
+# Verzeichnis legen, damit der Host beide Reports an einer Stelle
+# vorfindet.
 mkdir -p "$STAGING/.coverage"
-cp -r /work/.coverage/. "$STAGING/.coverage/" 2>/dev/null || true
+if [ -d /work/.coverage ] && [ -n "$(ls -A /work/.coverage 2>/dev/null)" ]; then
+    cp -r /work/.coverage/. "$STAGING/.coverage/"
+fi
+if [ -d /work/frontend/coverage ] && [ -n "$(ls -A /work/frontend/coverage 2>/dev/null)" ]; then
+    mkdir -p "$STAGING/.coverage/frontend"
+    cp -r /work/frontend/coverage/. "$STAGING/.coverage/frontend/"
+fi
 
 BUNDLE_SRC=/work/src-tauri/target/release/bundle
 if [ -d "$BUNDLE_SRC" ] && [ -n "$(ls -A "$BUNDLE_SRC" 2>/dev/null)" ]; then
