@@ -2,6 +2,12 @@
 # Siehe docs/plan/planning/open/012-rustsec-allowlist-revisit.md
 # (Trigger: Tauri-Update auf gtk-rs-Nachfolger oder libadwaita).
 #
+# **Ablaufdatum (GG-NFA-QG-005):** 2026-11-23.
+# Spaetestens dann muss diese Allowlist neu bewertet werden,
+# unabhaengig davon, ob die in Trigger 012 genannten Bedingungen
+# bereits eingetreten sind. Setzen wir die Allowlist fort, bekommt
+# sie ein neues Ablaufdatum und einen aktualisierten Statusvermerk.
+#
 # Jeder Eintrag listet die zugehoerige Crate, damit ein Review
 # nachvollziehen kann, was wir akzeptieren. Neue unmaintained-
 # Warnings sind weiterhin Gate-blockierend (Makefile dep-audit-rust

@@ -2,6 +2,10 @@
 
 **Status:** open
 **Eroeffnet:** 2026-05-23
+**Ablaufdatum:** 2026-11-23 (sechs Monate; harte Review-Pflicht
+unabhaengig davon, ob die unten genannten Aktivierungsbedingungen
+schon erfuellt sind — vgl. GG-NFA-QG-005 „Ausnahmen sind mit
+Begruendung und Ablaufdatum im Repository hinterlegt").
 **Bezug:** [Lastenheft GG-NFA-QG-005](../../../../spec/lastenheft.md)
 (Security-Scan); `src-tauri/audit.toml`; `Makefile` Target
 `dep-audit-rust`.
