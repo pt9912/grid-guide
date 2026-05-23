@@ -202,7 +202,15 @@ arch-check: ## Hexagonale Tabu-Regeln durchsetzen
 .PHONY: dep-audit dep-audit-rust dep-audit-frontend
 dep-audit: dep-audit-rust dep-audit-frontend ## Security-Scan beider Stacks
 
+# cargo-audit liest seine Allowlist aus $CARGO_HOME/audit.toml.
+# Kanonische Quelle ist src-tauri/audit.toml (vgl. Open-Item 012);
+# wir spiegeln sie bei jedem Audit-Aufruf dorthin, damit der Lauf
+# auf jedem Runner (Container, CI, Host) dieselbe Liste sieht.
+# Idempotent — cp ueberschreibt nur, wenn sich die Datei aendert.
 dep-audit-rust:
+	@cargo_home="$${CARGO_HOME:-$$HOME/.cargo}"; \
+		mkdir -p "$$cargo_home"; \
+		cp $(TAURI_DIR)/audit.toml "$$cargo_home/audit.toml"
 	cd $(TAURI_DIR) && $(CARGO) audit \
 		--deny unmaintained \
 		--deny unsound \
