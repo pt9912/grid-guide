@@ -107,6 +107,9 @@ Diagnose; `scripts/repro-check.sh` PASS).
 
 ### M2 — Domain-Kern und Katalog-Seed
 
+**Slice-Plan-Skizze:** [`next/M2-Slice-Plan.md`](../next/M2-Slice-Plan.md)
+(eroeffnet 2026-05-23; noch nicht aktiviert — Review-Stufe).
+
 - **Lieferziel:** Datenmodell und Vokabulare im hexagonalen Kern,
   plus erstes Profil und erster Falltyp als Seed.
   - `hexagon/core/domain` mit `Project`, `Profile`, `Falltyp`,
@@ -138,7 +141,7 @@ Diagnose; `scripts/repro-check.sh` PASS).
         gemaess `GG-NFA-COV-001`.
   - [ ] Architektur-Check meldet keine Domain-zu-Adapter-Imports
         (`GG-CC-003`).
-- **Status:** `Pending`.
+- **Status:** `Pending` (Skizze in `next/`, Aktivierung steht aus).
 
 ### M3 — Projekt-Lifecycle und Persistenz
 

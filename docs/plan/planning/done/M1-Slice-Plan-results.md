@@ -67,17 +67,18 @@ Trigger im `open/`-Verzeichnis bzw. wandern dorthin:
 
 | Trigger | Inhalt                                                                            |
 | ------- | --------------------------------------------------------------------------------- |
+| 006     | Dependabot/Renovate-ADR (war schon vor M1 angelegt; in M2-Kickoff zu pruefen)     |
 | 010     | apt-Snapshot-Pinning fuer voll-deterministischen Container-Build                  |
 | 011     | Bundle-Reproduzierbarkeit (`.deb` + `.AppImage`) nach `GG-NFA-INSTALL-001`        |
 | 012     | RustSec-Allowlist (`audit.toml`); Review bis 2026-11-23 oder beim naechsten Tauri-Update |
 | 013     | `main.rs`-Coverage-Exception via `tauri::test::mock_runtime` ohne Wry-Event-Loop  |
-| 014     | Dependabot/Renovate fuer GitHub-Action- und Crate-Versionen (ADR-Folge)            |
 | 015     | Release-Workflow operativ validieren (ADR 0005 §4.2)                              |
 | 016     | Windows-Test-Runtime fuer `make gates` (`STATUS_ENTRYPOINT_NOT_FOUND`)            |
 
-Trigger 014 ist neu identifiziert (in ADR 0005 §2.4 erwaehnt aber
-nicht als eigenes Item gelistet); falls noch nicht angelegt, wandert
-er im M2-Kickoff in `open/`.
+Trigger 014 in einer fruehen Fassung dieser Notiz war eine
+Fehlbenennung — Dependabot/Renovate ist seit dem ADR-Trigger-Sweep
+2026-05-22 als Trigger 006 dokumentiert. Es gibt keinen Trigger
+014 im Repository.
 
 ---
 
