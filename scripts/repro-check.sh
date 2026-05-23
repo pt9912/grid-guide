@@ -58,7 +58,11 @@ build_and_hash() {
     # Build-Output landet im Container in /tmp/build.log. Nur die
     # sha256sum-Zeile geht auf stdout — damit ist die Hash-Extraktion
     # robust gegen Vite-/cargo-Logaenderungen (H6-Review-Finding).
-    docker run --rm "${IMAGE_TAG}:${run}" sh -c '
+    #
+    # bash statt sh, weil das Image (node:bookworm-slim) /bin/sh =
+    # dash bereitstellt; dash kennt `set -o pipefail` nicht. bash
+    # ist via build-essential im gates-Stage installiert.
+    docker run --rm "${IMAGE_TAG}:${run}" bash -c '
         set -euo pipefail
         {
             cd /work/frontend
