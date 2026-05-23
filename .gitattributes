@@ -1,0 +1,43 @@
+# Erzwingt LF-Zeilenenden im Working Tree auf allen Plattformen.
+#
+# Hintergrund: prettier ist via .prettierrc auf `endOfLine: "lf"`
+# eingestellt, .editorconfig ebenfalls. Ohne .gitattributes
+# konvertiert git auf Windows beim Checkout (core.autocrlf=true,
+# Default in vielen Installationen) LF -> CRLF, und prettier
+# meldet die kompletten Sources als Drift. Mit der Regel hier
+# bleibt der Working Tree plattformuebergreifend identisch.
+#
+# `text=auto` laesst git Binaer/Text automatisch erkennen;
+# `eol=lf` erzwingt LF beim Checkout fuer als Text erkannte
+# Dateien — auch unter Windows.
+* text=auto eol=lf
+
+# Erzwinge LF explizit fuer Dateien, deren Inhalt prettier oder
+# eslint pruefen, damit kein Auto-Erkennungs-Edge-Case (z. B.
+# leere oder sehr kurze Files) durchschlaegt.
+*.js text eol=lf
+*.ts text eol=lf
+*.svelte text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.html text eol=lf
+*.md text eol=lf
+*.toml text eol=lf
+*.rs text eol=lf
+*.sh text eol=lf
+
+# Lockfiles und generierte Files ebenfalls LF, damit Repro-Builds
+# nicht durch versteckte CRLF-Diffs scheitern.
+pnpm-lock.yaml text eol=lf
+Cargo.lock text eol=lf
+
+# Binaere Assets explizit als binary, damit git sie nicht
+# als Text behandelt und keine EOL-Normalisierung versucht.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.icns binary
+*.pdf binary
