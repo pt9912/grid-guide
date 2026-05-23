@@ -2,6 +2,12 @@
 //
 // Konvention:
 //   - Eine Datei pro Vokabular, identifier-gleichnamiges Enum.
+//     **Bewusste Ausnahme:** `falltyp.rs` enthaelt das Enum
+//     `FalltypId`, nicht `Falltyp`. Der Lastenheft-Name `Falltyp`
+//     ist fuer die fachliche Entitaet in `domain::Falltyp`
+//     reserviert (M2-W2). Serde-Repraesentation des Enums ist
+//     unveraendert — fachlich erfuellt es `GG-DATA-004`-Block
+//     `Falltyp`.
 //   - Strikt `#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash,
 //     Serialize, Deserialize)]` — Vokabulare sind value-objects
 //     gemaess `GG-CC-007` (Immutable Domain-Objekte).
@@ -28,7 +34,7 @@ pub mod zugangsart;
 
 pub use anlagenart::Anlagenart;
 pub use dokumenttyp::Dokumenttyp;
-pub use falltyp::Falltyp;
+pub use falltyp::FalltypId;
 pub use katalogstatus::Katalogstatus;
 pub use nachnutzungsstatus::Nachnutzungsstatus;
 pub use profiltyp::Profiltyp;
