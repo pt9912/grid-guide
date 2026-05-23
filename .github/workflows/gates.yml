@@ -30,14 +30,6 @@ jobs:
   gates:
     name: gates (${{ matrix.platform }})
     runs-on: ${{ matrix.runner }}
-    # Matrix-Eintraege mit `disabled: true` werden uebersprungen.
-    # Aktuell trifft das nur Windows: tauri-2.x-Linktime-Probleme
-    # mit der WebView2-DLL fuehren zu STATUS_ENTRYPOINT_NOT_FOUND
-    # bevor ueberhaupt Tests anlaufen — siehe
-    # docs/plan/planning/open/016-windows-test-runtime-setup.md.
-    # Sobald Trigger 016 aufgeloest ist, hier disabled wieder
-    # auf false setzen.
-    if: ${{ !matrix.disabled }}
 
     strategy:
       fail-fast: false
@@ -47,8 +39,21 @@ jobs:
           - { runner: macos-latest, platform: macos, disabled: false }
           - { runner: windows-latest, platform: windows, disabled: true }
 
+    # Matrix-Eintraege mit `disabled: true` skippen jeden Step und
+    # erscheinen damit im UI als "skipped". Aktuell trifft das nur
+    # Windows: tauri-2.x-Linktime-Probleme mit der WebView2-DLL
+    # fuehren zu STATUS_ENTRYPOINT_NOT_FOUND bevor Tests anlaufen
+    # (siehe docs/plan/planning/open/016-windows-test-runtime-setup.md).
+    # Sobald Trigger 016 aufgeloest ist, hier `disabled: true` auf
+    # `false` setzen — sonst keine Aenderungen noetig, weil jeder
+    # Step bereits per `if: !matrix.disabled` durchgeleitet wird.
+    #
+    # Job-Level-`if:` waere ergonomischer, hat aber keinen Zugriff
+    # auf `matrix.*` (matrix wird zur Job-Expansion ausgewertet,
+    # `if:` davor — daher die Step-fuer-Step-Loesung unten.
     steps:
       - name: Checkout
+        if: ${{ !matrix.disabled }}
         uses: actions/checkout@v6
 
       # Plattform-spezifische Systempakete. Linux braucht die
@@ -58,7 +63,7 @@ jobs:
       # auf windows-latest ebenso vorinstalliert (kein expliziter
       # Schritt noetig).
       - name: System packages (linux)
-        if: matrix.platform == 'linux'
+        if: ${{ !matrix.disabled && matrix.platform == 'linux' }}
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
@@ -75,9 +80,11 @@ jobs:
       # show` triggert den Toolchain-Download und macht den State
       # im Workflow-Log sichtbar.
       - name: Rust toolchain
+        if: ${{ !matrix.disabled }}
         run: rustup show
 
       - name: Rust cache
+        if: ${{ !matrix.disabled }}
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
@@ -92,11 +99,13 @@ jobs:
       # ohne explizites package_json_file scannt sie nur den Repo-
       # Root und findet das Feld nicht.
       - name: pnpm setup
+        if: ${{ !matrix.disabled }}
         uses: pnpm/action-setup@v6
         with:
           package_json_file: frontend/package.json
 
       - name: Node toolchain
+        if: ${{ !matrix.disabled }}
         uses: actions/setup-node@v6
         with:
           # Muss synchron zum Dockerfile-ARG NODE_VERSION bleiben.
@@ -111,6 +120,7 @@ jobs:
       # liegen. `cargo install --locked --version X.Y.Z` ist
       # idempotent — bei Cache-Hit ein No-Op, sonst Build.
       - name: cargo tools
+        if: ${{ !matrix.disabled }}
         run: |
           cargo install --locked --version 0.8.7 cargo-llvm-cov
           cargo install --locked --version 0.22.1 cargo-audit
@@ -119,13 +129,14 @@ jobs:
           rustup component add llvm-tools-preview
 
       - name: make gates
+        if: ${{ !matrix.disabled }}
         run: make gates
 
       # Coverage-Reports nur vom Linux-Pflichtjob hochladen.
       # macOS/Windows-Reports unterscheiden sich kaum und wuerden
       # nur Artefakt-Rauschen erzeugen.
       - name: Upload coverage
-        if: matrix.platform == 'linux' && always()
+        if: ${{ !matrix.disabled && matrix.platform == 'linux' && always() }}
         uses: actions/upload-artifact@v7
         with:
           name: coverage-${{ matrix.platform }}
