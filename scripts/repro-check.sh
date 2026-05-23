@@ -42,9 +42,14 @@ trap cleanup EXIT INT TERM
 build_and_hash() {
     local run="$1"
     echo "=========================================================="
-    echo " Lauf ${run}: Container bauen (--pull --no-cache)"
+    echo " Lauf ${run}: Container bauen (--pull --no-cache --target gates)"
     echo "=========================================================="
-    docker build --pull --no-cache -t "${IMAGE_TAG}:${run}" "${REPO_ROOT}"
+    # --target gates explizit, weil das Dockerfile nach gates noch
+    # die Stages coverage-report und ci-bundle definiert. Ohne
+    # --target waehlt Docker den letzten Stage (ci-bundle), und
+    # dessen ENTRYPOINT verschluckt unseren sha256sum-Aufruf.
+    docker build --pull --no-cache --target gates \
+        -t "${IMAGE_TAG}:${run}" "${REPO_ROOT}"
 
     echo "=========================================================="
     echo " Lauf ${run}: Binary erzeugen, Build-Log unterdruecken,"
