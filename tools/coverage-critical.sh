@@ -46,12 +46,20 @@ PATTERNS=(
 )
 
 # Awk-Parser: pro SF-Record speichern, bei LF/LH die Zahlen
-# aufnehmen, bei end_of_record die Datei gegen alle PATTERNS
-# pruefen und nur bei Match in die Ergebnis-Tabelle ausgeben.
-awk -v thresh="$THRESHOLD" -v patterns="$(IFS='|'; echo "${PATTERNS[*]}")" '
+# aufnehmen, bei end_of_record die Datei gegen jedes PATTERN
+# einzeln pruefen, Match-Zaehler pro PATTERN fuehren und nur bei
+# Match in die Ergebnis-Tabelle ausgeben.
+#
+# Jedes PATTERN muss mindestens einmal matchen — sonst Exit 2 mit
+# klarer Diagnose. Damit kann der Gate nicht stillschweigend auf
+# eine Teilmenge der kritischen Module degradieren, wenn ein File
+# umbenannt wird oder nicht kompiliert (Review-Finding F1 aus dem
+# M2-W2-Review).
+awk -v thresh="$THRESHOLD" -v patterns_str="$(IFS='|'; echo "${PATTERNS[*]}")" '
     BEGIN {
-        any = 0
-        fail = 0
+        n = split(patterns_str, pats, "|")
+        for (i = 1; i <= n; i++) hits[i] = 0
+        fail_threshold = 0
         printf("%-50s %8s %8s %8s\n", "File", "Lines", "Hit", "Cover%")
         printf("%-50s %8s %8s %8s\n", "----", "-----", "---", "------")
     }
@@ -59,27 +67,38 @@ awk -v thresh="$THRESHOLD" -v patterns="$(IFS='|'; echo "${PATTERNS[*]}")" '
     /^LF:/  { lf = substr($0, 4) + 0; next }
     /^LH:/  { lh = substr($0, 4) + 0; next }
     /^end_of_record$/ {
-        if (sf ~ patterns) {
-            any = 1
-            pct = (lf > 0) ? (lh / lf * 100.0) : 100.0
-            status = (pct >= thresh) ? "OK" : "LOW"
-            printf("%-50s %8d %8d %7.2f%% %s\n", sf, lf, lh, pct, status)
-            if (pct < thresh) fail = 1
+        for (i = 1; i <= n; i++) {
+            if (sf ~ pats[i]) {
+                hits[i]++
+                pct = (lf > 0) ? (lh / lf * 100.0) : 100.0
+                status = (pct >= thresh) ? "OK" : "LOW"
+                printf("%-50s %8d %8d %7.2f%% %s\n", sf, lf, lh, pct, status)
+                if (pct < thresh) fail_threshold = 1
+                break  # Jeder SF kann nur zu einem Pattern zugehoeren.
+            }
         }
         sf=""; lf=0; lh=0
     }
     END {
-        if (!any) {
-            print "[coverage-critical] FAIL: kein kritisches Modul im LCOV gefunden." > "/dev/stderr"
-            print "[coverage-critical] Pruefe PATTERN-Liste im Skript gegen die" > "/dev/stderr"
-            print "[coverage-critical] Pfade in .coverage/rust.lcov."             > "/dev/stderr"
+        # Per-PATTERN-Verifizierung: jede gelistete Regel muss
+        # mindestens ein File im LCOV gefunden haben.
+        missing = 0
+        for (i = 1; i <= n; i++) {
+            if (hits[i] == 0) {
+                printf("[coverage-critical] FAIL: PATTERN /%s/ matched kein File im LCOV\n", pats[i]) > "/dev/stderr"
+                missing = 1
+            }
+        }
+        if (missing) {
+            print "[coverage-critical] Hinweis: PATTERN-Liste im Skript veraltet, oder" > "/dev/stderr"
+            print "[coverage-critical] kritisches Modul nicht im Cov-Lauf enthalten."   > "/dev/stderr"
             exit 2
         }
-        if (fail) {
+        if (fail_threshold) {
             printf("[coverage-critical] FAIL: Mindestens ein kritisches Modul unter %d%%\n", thresh) > "/dev/stderr"
             exit 1
         }
-        printf("[coverage-critical] PASS: alle kritischen Module >= %d%% Lines\n", thresh)
+        printf("[coverage-critical] PASS: alle kritischen Module >= %d%% Lines (%d/%d Patterns)\n", thresh, n, n)
         exit 0
     }
 ' "$LCOV"
