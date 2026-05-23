@@ -8,4 +8,5 @@
 //   - seed/   : In-Memory-Seed-Daten (M2-Welle 3 + 4).
 //   - use_cases/ : Application-Services (M3+).
 
+pub mod domain;
 pub mod vocab;

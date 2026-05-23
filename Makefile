@@ -172,9 +172,8 @@ coverage-frontend: install-frontend
 	@mkdir -p $(COVERAGE_DIR)
 	cd $(FRONTEND_DIR) && $(PNPM) run test:coverage
 
-coverage-critical: ## 90% kritische Domainlogik (GG-NFA-COV-002; M1: hexagon/core leer -> NO-OP-PASS)
-	@echo "[coverage-critical] M1-NO-OP: hexagon/core/ ist leer. Aktiv ab M2 ('Domain-Kern und Katalog-Seed')."
-	@echo "[coverage-critical] STATUS: PASS-NO-OP"
+coverage-critical: coverage-rust ## 90% kritische Domainlogik (GG-NFA-COV-002 via tools/coverage-critical.sh)
+	$(TOOLS_DIR)/coverage-critical.sh $(COVERAGE_DIR)/rust.lcov
 
 # ============================================================
 # Architektur-Check (GG-NFA-QG-003)
