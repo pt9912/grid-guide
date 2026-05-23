@@ -154,6 +154,13 @@ coverage: coverage-rust coverage-frontend coverage-critical ## Coverage beider S
 # echtes Display nicht gecovert werden; die testbare Logik liegt in
 # src/lib.rs (siehe lib.rs Doc-Kommentar). --ignore-filename-regex
 # nimmt main.rs daher strukturell aus der Messung.
+#
+# Konflikt-Hinweis: Dieser Exclude widerspricht GG-NFA-COV-004 Teil 2
+# (Wiring-Code ist explizit nicht excludable) und ADR 0004 §2.4
+# (Begruendung gehoert in das Coverage-Konfig-File, nicht ins
+# Makefile). Aufloesung ist in docs/plan/planning/open/013-rust-
+# bootstrap-coverage-exception.md getriggert; bis dahin bleibt der
+# Exclude pragmatisch hier mit Querverweis.
 coverage-rust:
 	@mkdir -p $(COVERAGE_DIR)
 	cd $(TAURI_DIR) && $(CARGO) llvm-cov --locked \

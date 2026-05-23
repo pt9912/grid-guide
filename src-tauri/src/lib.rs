@@ -7,6 +7,13 @@
 // (MockRuntime) ausgefuehrt werden koennen. src/main.rs ist nur
 // noch der Wry-Bootstrap (drei Zeilen) und wird von der Coverage-
 // Messung per `--ignore-filename-regex` ausgenommen.
+//
+// Hinweis: Der main.rs-Exclude steht im Spannungsfeld mit GG-NFA-
+// COV-004 Teil 2 (Wiring-Code ist nicht excludable). Aufloesung
+// triggert docs/plan/planning/open/013-rust-bootstrap-coverage-
+// exception.md, sobald `tauri::test` ein synthetisches Beenden des
+// app.run()-Loops anbietet oder ein Headless-Display-Backend
+// verfuegbar wird.
 
 use tauri::Runtime;
 
