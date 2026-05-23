@@ -1,9 +1,10 @@
 # M2-Slice-Plan — Domain-Kern und Katalog-Seed
 
-**Status:** Next (Skizze; noch nicht aktiviert).
+**Status:** In Progress (aktiviert 2026-05-23 mit Welle 0; Welle 1
+Vokabular-Enums laeuft).
 **Eroeffnet:** 2026-05-23
-**Aktiviert:** —
-**Bezug:** [Roadmap M2](../in-progress/roadmap.md#m2--domain-kern-und-katalog-seed);
+**Aktiviert:** 2026-05-23
+**Bezug:** [Roadmap M2](roadmap.md#m2--domain-kern-und-katalog-seed);
 [ADR 0001](../../adr/0001-documentation-and-planning-structure.md);
 [`spec/architecture.md`](../../../../spec/architecture.md) §3 (`GG-AR-COMP-001` Catalog,
 `GG-AR-COMP-002` Project);
@@ -15,9 +16,10 @@
 
 Domain-Datenmodell und Seed-Daten im hexagonalen Kern aufbauen,
 ohne Use-Cases oder Adapter (die folgen in M3+). Ergebnis ist
-eine in-Memory-Wissensbasis: `Catalog` mit dem ersten Profil
-(Westnetz) und dem ersten Falltyp (`PV_NS_OhneSpeicher`),
-beides als unveraenderliche Rust-Strukturen.
+eine in-Memory-Wissensbasis, deren Domain-Strukturen vollständig als
+unveraenderliche Rust-Strukturen vorliegen. `Catalog` wird als
+Aggregate aus den Seed-Daten aufgebaut und enthaelt initial das erste
+Profil (Westnetz) sowie den ersten Falltyp (`PV_NS_OhneSpeicher`).
 
 `Project` als Domain-Entitaet kommt mit M2 als reine
 Datenstruktur (kein Persistenz-Verhalten — das ist M3). Damit ist
@@ -59,7 +61,7 @@ Offen, **werden in M2 NICHT geschlossen** (nur dokumentiert):
 
 ## 3. Wellen
 
-M2 ist in fuenf Wellen aufgeteilt; jede Welle endet mit einem
+M2 ist in sechs Wellen aufgeteilt; jede Welle endet mit einem
 gruenen `make gates`. Reihenfolge ist bewusst:
 Vokabulare → Strukturen → Seed → Falltyp → Closure.
 
@@ -79,8 +81,7 @@ Vokabulare → Strukturen → Seed → Falltyp → Closure.
 ### Welle 1 — Vokabular-Enums (`GG-DATA-004`)
 
 - **Lieferziel:** alle neun Vokabulare als Rust-Enums in
-  `src-tauri/src/hexagon/core/vocab/` (oder `domain/vocab/` —
-  Entscheidung beim Welle-Start). Strikt `#[derive(Debug, Clone,
+  `src-tauri/src/hexagon/core/vocab/`. Strikt `#[derive(Debug, Clone,
   Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]`.
 - **Enums:** `Profiltyp`, `Quellkatalog`, `Zugangsart`,
   `Nachnutzungsstatus`, `Katalogstatus`, `Anlagenart`,
@@ -123,13 +124,15 @@ Vokabulare → Strukturen → Seed → Falltyp → Closure.
 - **Lieferziel:** das Westnetz-Profil als Seed-Datensatz unter
   `hexagon/core/seed/westnetz.rs` (Rust-Konstante mit
   `Profile::try_new`-Aufruf) plus Smoke-Test, der den Seed laedt
-  und gegen `Profile`-Invarianten prueft. Persistente Datei-Form
-  ist M3 — hier ausschliesslich In-Memory.
+  und gegen `Profile`-Invarianten prueft. Das Modul liefert einen
+  gueltigen `Profile`-Seed, der in den M2-`Catalog`-Aufbau
+  integriert wird. Persistente Datei-Form ist M3 — hier ausschliesslich
+  In-Memory.
 - **Lastenheft-IDs:** `GG-DEC-001`, `GG-FA-CAT-003`,
   `GG-FA-CAT-006`, `GG-FA-CAT-007`.
 - **DoD:**
-  - [ ] `Catalog::seed_westnetz()` liefert ein gueltiges
-        `Profile` zurueck.
+- [ ] Seed-Funktion fuer Westnetz liefert ein gueltiges
+      `Profile` zurueck.
   - [ ] Test belegt: Profiltyp = Netzbetreiber, Quellkatalog =
         Westnetz, Nachnutzungsstatus dokumentiert, Anlagenart-
         Liste enthaelt mindestens `PV_NS_OhneSpeicher`-
@@ -145,8 +148,8 @@ Vokabulare → Strukturen → Seed → Falltyp → Closure.
   Westnetz-Katalog.
 - **Lastenheft-IDs:** `GG-DEC-002`, `GG-MVP-003`, `GG-FA-CAT-006`.
 - **DoD:**
-  - [ ] `Catalog::seed_pv_ns_ohne_speicher()` liefert ein
-        gueltiges `Falltyp`-Objekt.
+- [ ] `seed_pv_ns_ohne_speicher()` liefert ein
+      gueltiges `Falltyp`-Objekt.
   - [ ] Pflichtfelder und Pflichtunterlagen sind als Vec/Set
         mit Enum-Werten hinterlegt — keine String-Listen.
   - [ ] Cross-Check-Test: `Falltyp::pflichtdokumente` ueberlappt

@@ -2,6 +2,11 @@
 
 **Status:** open
 **Eroeffnet:** 2026-05-22
+**Pruefung M2-W0 (2026-05-23):** weiter deferred — M2 fuegt
+keine neuen Dependencies hinzu (reine Domain-Strukturen + Enums).
+Aktivierung wird empfohlen sobald die erste neue Crate-/Action-
+Bump-Welle ansteht oder ein erster `--deny`-Audit-Bruch durch
+einen versteckten Dep-Drift droht.
 **Bezug:** [ADR 0005 §6](../../adr/0005-ci-release-tauri-action.md);
 [Lastenheft](../../../../spec/lastenheft.md) (`GG-NFA-INSTALL-001`,
 `GG-NFA-QG-005`, `GG-NFA-CICD-001`).
