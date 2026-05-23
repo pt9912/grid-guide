@@ -30,14 +30,22 @@ jobs:
   gates:
     name: gates (${{ matrix.platform }})
     runs-on: ${{ matrix.runner }}
+    # Matrix-Eintraege mit `disabled: true` werden uebersprungen.
+    # Aktuell trifft das nur Windows: tauri-2.x-Linktime-Probleme
+    # mit der WebView2-DLL fuehren zu STATUS_ENTRYPOINT_NOT_FOUND
+    # bevor ueberhaupt Tests anlaufen — siehe
+    # docs/plan/planning/open/016-windows-test-runtime-setup.md.
+    # Sobald Trigger 016 aufgeloest ist, hier disabled wieder
+    # auf false setzen.
+    if: ${{ !matrix.disabled }}
 
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { runner: ubuntu-24.04, platform: linux }
-          - { runner: macos-latest, platform: macos }
-          - { runner: windows-latest, platform: windows }
+          - { runner: ubuntu-24.04, platform: linux, disabled: false }
+          - { runner: macos-latest, platform: macos, disabled: false }
+          - { runner: windows-latest, platform: windows, disabled: true }
 
     steps:
       - name: Checkout
