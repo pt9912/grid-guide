@@ -339,20 +339,21 @@ Geschlossen:
   ADR-Lifecycle.
 - **ADR 0002** (`Accepted`) — Frontend-Stack SvelteKit 2.x.
 - **ADR 0003** (`Accepted`) — Desktop-Runtime Tauri 2.x.
+- **ADR 0004** (`Accepted` seit M1-W7) — Quality-Gates- und
+  Coverage-Tooling. Spike-Vertrag §4 erfuellt: `make
+  container-gates`-Run gruen, Rust-Coverage ~94 % Lines, Frontend-
+  Coverage ~94,73 % Lines.
+- **ADR 0005** (`Accepted` seit M1-W7) — CI/Release mit GitHub
+  Actions + `tauri-action`. Spike-Vertrag §4 in MVP-Accept (§4.1)
+  + V1-Validierung (§4.2) gegliedert; MVP-Anteil erfuellt
+  (Linux-Pflichtjob gruen, macOS gruen, Windows Best-Effort).
+  V1-Validierungs-Items unter
+  [Trigger 015](../open/015-release-workflow-validierung.md).
+- **Trigger 001** (`Done` seit M1-W7) —
+  [`spec/architecture.md`-Skelett](../../../../spec/architecture.md)
+  vorhanden; Trigger in
+  [`done/`](../done/001-architecture-md-skeleton.md).
 - **Lastenheft v0.4.0** — Anforderungsstand fuer M1..M8.
-
-Offen (werden in M1 geschlossen):
-
-- **ADR 0004** (`Provisional`) — Quality-Gates- und
-  Coverage-Tooling. Spike-Vertrag §4: `make container-gates`-Run
-  gruen + Skelett-Coverage ≥ 80 % + arch-check-Fixtures rot. Wechsel
-  auf `Accepted` mit M1-W7-Closure.
-- **ADR 0005** (`Provisional`) — CI/Release mit GitHub Actions +
-  `tauri-action`. Spike-Vertrag §4: `.github/workflows/gates.yml`
-  Linux required-check gruen + macOS/Windows-Best-Effort
-  durchlaufen. Wechsel auf `Accepted` mit M1-W7-Closure.
-- **Trigger 001** (`open`) — `spec/architecture.md`-Skelett. Wird
-  mit M1-W7 nach `done/` ueberfuehrt.
 
 Im Laufe von M1 neu eroeffnet (Review- und Build-Findings):
 

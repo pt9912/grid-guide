@@ -1,9 +1,13 @@
 # Trigger 001 — Skelett fuer `spec/architecture.md` anlegen
 
-**Status:** open
+**Status:** Done (abgeschlossen 2026-05-23 mit M1-Welle 7;
+Closure-Notiz am Ende dieser Datei).
 **Eroeffnet:** 2026-05-22
+**Abgeschlossen:** 2026-05-23
 **Bezug:** [ADR 0001](../../adr/0001-documentation-and-planning-structure.md)
-§2.1; `grid-gym/spec/architecture.md` als Referenzformat.
+§2.1; `grid-gym/spec/architecture.md` als Referenzformat;
+[`spec/architecture.md`](../../../../spec/architecture.md)
+(geliefertes Ergebnis).
 
 ---
 

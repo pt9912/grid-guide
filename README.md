@@ -12,12 +12,14 @@ oder fachkundige Elektroinstallateure (siehe
 
 ## Status
 
-Aktiv in Entwicklung — **M1 (Foundation, Build-Tooling und CI)**
-laeuft, Wellen 0-5 geliefert (Container-Lauf in Verifikation),
-Wellen 6 (GitHub-Actions-Matrix) und 7 (architecture.md +
-ADR-Closure) noch offen. Siehe
-[Roadmap](docs/plan/planning/in-progress/roadmap.md) und
-[M1-Slice-Plan](docs/plan/planning/in-progress/M1-Slice-Plan.md).
+Aktiv in Entwicklung — **M1 (Foundation, Build-Tooling und CI)
+abgeschlossen** (2026-05-23, alle sieben Wellen geliefert; Linux-
+CI-Pflichtjob gruen, macOS gruen, Windows als Best-Effort offen
+gemaess [Trigger 016](docs/plan/planning/open/016-windows-test-runtime-setup.md)).
+M2 (Domain-Kern + Katalog-Seed) noch nicht aktiviert. Siehe
+[Roadmap](docs/plan/planning/in-progress/roadmap.md),
+[M1-Slice-Plan](docs/plan/planning/done/M1-Slice-Plan.md) und
+[M1-Closure-Notiz](docs/plan/planning/done/M1-Slice-Plan-results.md).
 
 ## Quick-Start
 

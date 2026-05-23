@@ -13,7 +13,7 @@ Closure-Notiz: [`M1-Slice-Plan-results.md`](M1-Slice-Plan-results.md)).
 (Spike-Vertrag);
 [ADR 0005](../../adr/0005-ci-release-tauri-action.md) §4
 (Spike-Vertrag);
-[Trigger 001 — architecture.md-Skelett](../open/001-architecture-md-skeleton.md);
+[Trigger 001 — architecture.md-Skelett](../done/001-architecture-md-skeleton.md);
 [Lastenheft](../../../../spec/lastenheft.md) v0.4.0.
 
 ---
@@ -47,7 +47,7 @@ Offen, **werden mit M1 geschlossen**:
 
 - ADR 0004 (`Provisional`) — Spike-Vertrag in §4.
 - ADR 0005 (`Provisional`) — Spike-Vertrag in §4.
-- Trigger 001 (`open`) — `spec/architecture.md`-Skelett.
+- Trigger 001 (`Done` mit M1-W7) — `spec/architecture.md`-Skelett.
 
 ---
 
@@ -445,7 +445,7 @@ abgehakt ist.
   vorbereitet.
 - **Schritte:**
   - `spec/architecture.md` Skelett gemaess
-    [Trigger 001](../open/001-architecture-md-skeleton.md):
+    [Trigger 001](../done/001-architecture-md-skeleton.md):
     - §1 `GG-AR-COMP-*` Komponenten-Liste (Catalog, Project,
       Validation, Submission als Stubs).
     - §2 `GG-AR-PORT-DRV-*` und `GG-AR-PORT-DRN-*` als Stubs
