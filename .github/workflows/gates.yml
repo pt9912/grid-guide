@@ -41,7 +41,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # Plattform-spezifische Systempakete. Linux braucht die
       # Tauri-2.x-Webkit-Stack-Header (gleiche Liste wie Dockerfile
@@ -84,12 +84,12 @@ jobs:
       # ohne explizites package_json_file scannt sie nur den Repo-
       # Root und findet das Feld nicht.
       - name: pnpm setup
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           package_json_file: frontend/package.json
 
       - name: Node toolchain
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           # Muss synchron zum Dockerfile-ARG NODE_VERSION bleiben.
           # Wenn das Dockerfile bumpt, hier mitziehen.
@@ -118,7 +118,7 @@ jobs:
       # nur Artefakt-Rauschen erzeugen.
       - name: Upload coverage
         if: matrix.platform == 'linux' && always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-${{ matrix.platform }}
           path: |

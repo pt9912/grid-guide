@@ -6,10 +6,10 @@
 #   - Trigger ausschliesslich `workflow_dispatch`. Auto-Trigger
 #     auf Tag-Push (`v*.*.*`) bleibt fuer V1 reserviert, sobald
 #     Signing-Secrets (Apple/Authenticode) verfuegbar sind.
-#   - tauri-action-Pin auf @v0 ist Platzhalter. ADR 0005 §2.4
-#     verlangt SHA-Pin; Aktualisierung ist Bedingung fuer
-#     Wechsel von "Stub" auf "produktiv". Trigger fuer den Bump
-#     ist die Verfuegbarkeit echter Release-Tags.
+#   - tauri-action ist auf den SHA von v0.6.2 gepinnt (vgl.
+#     ADR 0005 §2.4). Dependabot/Renovate uebernimmt die Pflege
+#     nach Trigger 014 (Tooling-Bot-Konfiguration, separater
+#     Folge-ADR).
 #   - Bundles sind im MVP unsigniert (vgl. ADR 0005 §2.5,
 #     GG-NFA-INSTALL-002 V1).
 #
@@ -50,7 +50,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: System packages (linux)
         if: matrix.platform == 'linux'
@@ -76,12 +76,12 @@ jobs:
           cache-all-crates: "true"
 
       - name: pnpm setup
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           package_json_file: frontend/package.json
 
       - name: Node toolchain
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 24.16.0
           cache: pnpm
@@ -91,12 +91,10 @@ jobs:
         working-directory: frontend
         run: pnpm install --frozen-lockfile
 
-      # TODO ADR 0005 §2.4: SHA-Pin statt @v0 setzen, sobald der
-      # erste Release-Lauf den aktuellen tauri-action-SHA validiert
-      # hat. Dependabot/Renovate uebernimmt anschliessend die
-      # Pflege (separater Tooling-Setup-ADR).
+      # SHA-Pin per ADR 0005 §2.4; menschenlesbare Version im
+      # Kommentar. Beim Bump beide Stellen aktualisieren.
       - name: tauri-action
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@1ddc7b49b13c3038297360482fcb3e058764d7c9 # v0.6.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Signing-Secrets sind plattformspezifisch und im MVP
